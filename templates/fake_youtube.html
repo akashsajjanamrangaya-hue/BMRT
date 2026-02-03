@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VideoHub</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fake_youtube.css') }}" />
+</head>
+<body>
+  <header class="yt-header">
+    <div class="brand">VideoHub</div>
+    <form class="yt-search">
+      <input type="text" placeholder="Search" />
+      <button type="button">Search</button>
+    </form>
+  </header>
+
+  <main class="yt-layout">
+    <section class="video-pane">
+      {% if current_video %}
+        <div class="video-frame">
+          <div class="video-placeholder">Now Playing</div>
+        </div>
+        <h1>{{ current_video.title }}</h1>
+        <p class="meta">{{ current_video.views }} • {{ current_video.channel }}</p>
+        <div class="actions">
+          <button>Like</button>
+          <button>Share</button>
+          <button>Save</button>
+        </div>
+      {% else %}
+        <div class="video-frame">
+          <div class="video-placeholder">Select a video to start watching</div>
+        </div>
+        <h1>Featured Cyber Defense Playlists</h1>
+        <p class="meta">Curated playlists for security professionals.</p>
+      {% endif %}
+    </section>
+
+    <aside class="video-list">
+      {% for video in videos %}
+        <a href="{{ url_for('fake_youtube', video=video.id) }}" class="video-card">
+          <div class="thumbnail">
+            <span>{{ video.duration }}</span>
+          </div>
+          <div>
+            <h3>{{ video.title }}</h3>
+            <p>{{ video.channel }}</p>
+            <p class="views">{{ video.views }}</p>
+          </div>
+        </a>
+      {% endfor %}
+    </aside>
+  </main>
+</body>
+</html>

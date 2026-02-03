@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Behavior-Based Cyber Deception System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <main class="landing">
+    <section class="card">
+      <h1>Behavior-Based Cyber Deception System</h1>
+      <p>
+        Enter a website keyword to simulate behavioral routing for a cyber deception
+        environment.
+      </p>
+      <form action="{{ url_for('analyze') }}" method="post" class="input-group">
+        <input
+          type="text"
+          name="keyword"
+          placeholder="Try: google, amazon, youtube"
+          required
+        />
+        <button type="submit">Analyze &amp; Redirect</button>
+      </form>
+      <div class="examples">
+        <div>
+          <h3>Normal Input</h3>
+          <ul>
+            <li>google</li>
+            <li>amazon</li>
+            <li>youtube</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Abnormal Input</h3>
+          <ul>
+            <li>google/</li>
+            <li>admin</li>
+            <li>../config</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

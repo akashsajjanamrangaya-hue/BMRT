@@ -1,0 +1,5 @@
+{
+  "special_characters": ["/", "\\", "?", "#", "&", "..", "//"],
+  "sensitive_keywords": ["admin", "config", "login", "signin", "password", "root", "system"],
+  "allowed_pattern": "[a-zA-Z0-9]+"
+}
