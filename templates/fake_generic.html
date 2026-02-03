@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Portal</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <main class="landing">
+    <section class="card">
+      <h1>Secure Portal</h1>
+      <p>
+        Welcome to the secure gateway. Your session is active inside a protected
+        environment.
+      </p>
+      <a class="button" href="{{ url_for('fake_google') }}">Continue Browsing</a>
+    </section>
+  </main>
+</body>
+</html>

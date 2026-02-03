@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopSphere</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fake_amazon.css') }}" />
+</head>
+<body>
+  <header class="store-header">
+    <div class="brand">ShopSphere</div>
+    <div class="search-bar">
+      <input type="text" placeholder="Search products" />
+      <button type="button">Search</button>
+    </div>
+    <div class="account">Hello, Explorer</div>
+  </header>
+
+  <main class="catalog">
+    <h1>Recommended for Secure Workspaces</h1>
+    <section class="product-grid">
+      {% for product in products %}
+        <article class="product-card">
+          <div class="image"></div>
+          <h2>{{ product.name }}</h2>
+          <p class="price">{{ product.price }}</p>
+          <p class="rating">{{ product.rating }} ★ ({{ product.reviews }})</p>
+          <button>Add to Cart</button>
+        </article>
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>

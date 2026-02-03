@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fake_google.css') }}" />
+</head>
+<body>
+  <main class="google-shell">
+    <h1 class="logo">Searchly</h1>
+    <form class="search-box" method="post" action="{{ url_for('fake_google') }}">
+      <input type="text" name="query" placeholder="Search the web" required />
+      <div class="buttons">
+        <button type="submit">Search</button>
+        <button type="button">I'm Feeling Lucky</button>
+      </div>
+    </form>
+    <p class="footer">A fast search experience tailored for trusted exploration.</p>
+  </main>
+</body>
+</html>
