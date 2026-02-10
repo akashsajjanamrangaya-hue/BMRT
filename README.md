@@ -108,3 +108,23 @@ http://localhost:5000
 - The code is modular and commented for report/viva explanation.
 - Deception behavior is realistic and invisible to normal users.
 - No external APIs or databases are used.
+
+
+## Analytics Feature (/analytics)
+A read-only analytics dashboard is available at `/analytics` for demonstration.
+
+It uses `logs.txt` as the source of truth and:
+- Parses only entries with `classification=abnormal`
+- Groups abnormal attempts month-wise (`YYYY-MM`)
+- Counts abnormal attempts per month
+- Renders a dark-theme line chart (Month vs Number of abnormal attempts) using HTML5 Canvas + JavaScript
+- Shows only aggregate metrics (no raw keywords shown on UI)
+
+### Implementation Modules
+- `analytics_utils.py`
+  - `read_abnormal_monthly_counts(log_path)`
+- `/analytics` route in `app.py`
+- `templates/analytics.html` renders the chart client-side with Canvas
+- `static/analytics.css` styles the analytics dashboard
+
+The analytics view is read-only and does not allow modifying logs.

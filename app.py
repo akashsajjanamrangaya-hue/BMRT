@@ -7,6 +7,8 @@ from urllib.parse import quote_plus
 
 from flask import Flask, redirect, render_template, request, session, url_for
 
+from analytics_utils import read_abnormal_monthly_counts
+
 BASE_DIR = Path(__file__).resolve().parent
 DATASET_PATH = BASE_DIR / "dataset.json"
 LOG_PATH = BASE_DIR / "logs.txt"
@@ -167,6 +169,20 @@ def analyze():
     destination = resolve_fake_site(keyword)
     log_event(keyword, "abnormal", destination)
     return redirect(url_for(destination))
+
+
+@app.route("/analytics", methods=["GET"])
+def analytics():
+    """Read-only analytics dashboard for abnormal activity trends."""
+    monthly_counts = read_abnormal_monthly_counts(LOG_PATH)
+    total_abnormal = sum(monthly_counts.values())
+    return render_template(
+        "analytics.html",
+        month_labels=list(monthly_counts.keys()),
+        month_values=list(monthly_counts.values()),
+        total_abnormal=total_abnormal,
+        months=len(monthly_counts),
+    )
 
 
 @app.route("/fake/google", methods=["GET"])
