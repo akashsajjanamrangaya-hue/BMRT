@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VideoHub</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fake_youtube.css') }}" />
+</head>
+<body>
+  <header class="yt-header">
+    <div class="brand">VideoHub</div>
+    <div class="yt-search">
+      <input id="ytSearch" type="text" placeholder="Search videos" />
+      <button id="ytSearchBtn" type="button">Search</button>
+    </div>
+  </header>
+
+  <main class="yt-layout">
+    <section class="video-pane">
+      <div class="video-frame"><div class="video-placeholder" id="nowPlaying">Select a video</div></div>
+      <h1 id="videoTitle">Featured Security Content</h1>
+      <p class="meta" id="videoMeta">Curated internal recommendations</p>
+    </section>
+
+    <aside class="video-list" id="videoList"></aside>
+  </main>
+
+  <script>
+    const videos = [
+      { title: 'Behavior Analytics for Intrusion Detection', channel: 'SecureLab', views: '1.1M views', duration: '14:21' },
+      { title: 'Automated Attack Mitigation Workflow', channel: 'NetGuard', views: '780K views', duration: '11:04' },
+      { title: 'Decoy Infrastructure Design Patterns', channel: 'BlueTeam Hub', views: '640K views', duration: '17:33' },
+      { title: 'Session Containment in Deception Systems', channel: 'Cyber Academy', views: '420K views', duration: '09:48' }
+    ];
+
+    const listNode = document.getElementById('videoList');
+
+    function renderList(filter = '') {
+      listNode.innerHTML = '';
+      videos
+        .filter(v => v.title.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(v => {
+          const card = document.createElement('a');
+          card.href = '#';
+          card.className = 'video-card';
+          card.innerHTML = `
+            <div class="thumbnail"><span>${v.duration}</span></div>
+            <div>
+              <h3>${v.title}</h3>
+              <p>${v.channel}</p>
+              <p class="views">${v.views}</p>
+            </div>
+          `;
+          card.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('nowPlaying').textContent = 'Now Playing';
+            document.getElementById('videoTitle').textContent = v.title;
+            document.getElementById('videoMeta').textContent = `${v.views} • ${v.channel}`;
+          });
+          listNode.appendChild(card);
+        });
+    }
+
+    document.getElementById('ytSearchBtn').addEventListener('click', () => {
+      renderList(document.getElementById('ytSearch').value.trim());
+    });
+
+    renderList();
+  </script>
+</body>
+</html>

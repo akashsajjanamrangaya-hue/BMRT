@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Decoy Portal</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <main class="landing">
+    <section class="card">
+      <h1>Secure Decoy Portal</h1>
+      <p>Your session is active in a protected browsing environment.</p>
+      <div class="input-group">
+        <a class="button" href="{{ url_for('fake_google') }}">Open Search</a>
+        <a class="button" href="{{ url_for('fake_youtube') }}">Open Video</a>
+        <a class="button" href="{{ url_for('fake_amazon') }}">Open Shopping</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

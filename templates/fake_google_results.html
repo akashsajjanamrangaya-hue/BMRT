@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Results</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fake_google.css') }}" />
+</head>
+<body>
+  <header class="results-header">
+    <a href="{{ url_for('fake_google') }}" class="logo small">Searchly</a>
+    <input id="searchInput" type="text" value="{{ query }}" />
+    <button id="searchBtn">Search</button>
+  </header>
+
+  <section class="results" id="results"></section>
+
+  <script>
+    const q = document.getElementById('searchInput').value.trim() || 'security';
+    const pool = [
+      { title: 'Official Knowledge Center', url: 'knowledgehub.net', desc: 'Curated documentation and practical guides for professionals.' },
+      { title: 'Research Archive', url: 'researchvault.org', desc: 'Peer-reviewed summaries and topic-focused technical briefs.' },
+      { title: 'Learning Path Portal', url: 'learnstream.com', desc: 'Structured content paths for newcomers and experts.' },
+      { title: 'Community Forum', url: 'communitygrid.io', desc: 'Discussion threads, walkthroughs, and verified insights.' }
+    ];
+
+    function renderResults(query) {
+      const wrapper = document.getElementById('results');
+      wrapper.innerHTML = '';
+      pool.forEach((item, index) => {
+        const card = document.createElement('article');
+        card.className = 'result';
+        card.innerHTML = `
+          <a href="{{ url_for('fake_google_results') }}?q=${encodeURIComponent(query + ' ' + (index + 1))}" class="result-title">${query} ${item.title}</a>
+          <div class="result-url">${item.url}</div>
+          <p class="result-desc">${item.desc}</p>
+        `;
+        wrapper.appendChild(card);
+      });
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const query = document.getElementById('searchInput').value.trim() || 'security';
+      window.location.href = `{{ url_for('fake_google_results') }}?q=${encodeURIComponent(query)}`;
+    });
+
+    renderResults(q);
+  </script>
+</body>
+</html>

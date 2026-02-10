@@ -1,0 +1,12 @@
+{
+  "allowed_keywords": ["google", "youtube", "amazon"],
+  "abnormal_symbols": ["/", "\\", "?", "#", "&", "..", "//", "%", "=", "*", "<", ">"],
+  "restricted_keywords": ["admin", "config", "root", "password", "token", "login", "signin", "system", "etc"],
+  "allowed_pattern": "[a-zA-Z0-9]+",
+  "suspicious_behavior_rules": {
+    "rule_1": "Input contains abnormal symbols.",
+    "rule_2": "Input includes restricted keywords.",
+    "rule_3": "Input does not match allowed alphanumeric pattern.",
+    "rule_4": "Input keyword is outside approved website keyword list."
+  }
+}

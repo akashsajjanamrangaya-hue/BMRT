@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopSphere</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fake_amazon.css') }}" />
+</head>
+<body>
+  <header class="store-header">
+    <div class="brand">ShopSphere</div>
+    <div class="search-bar">
+      <input id="shopSearch" type="text" placeholder="Search products" />
+      <button id="shopSearchBtn" type="button">Search</button>
+    </div>
+    <div class="account">Hello, user</div>
+  </header>
+
+  <main class="catalog">
+    <h1>Recommended Products</h1>
+    <section class="product-grid" id="productGrid"></section>
+  </main>
+
+  <script>
+    const products = [
+      { name: 'Network Security Keyboard', price: '$79.99', rating: '4.7', reviews: '2,100' },
+      { name: 'Threat Monitor Webcam', price: '$59.49', rating: '4.5', reviews: '1,320' },
+      { name: 'Encrypted USB Token', price: '$45.00', rating: '4.6', reviews: '980' },
+      { name: 'Secure Noise-Cancel Headset', price: '$119.00', rating: '4.8', reviews: '3,400' }
+    ];
+
+    function renderProducts(filter = '') {
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+      products
+        .filter(p => p.name.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(p => {
+          const card = document.createElement('article');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <div class="image"></div>
+            <h2>${p.name}</h2>
+            <p class="price">${p.price}</p>
+            <p class="rating">${p.rating} ★ (${p.reviews})</p>
+            <button type="button">Add to Cart</button>
+          `;
+          grid.appendChild(card);
+        });
+    }
+
+    document.getElementById('shopSearchBtn').addEventListener('click', () => {
+      renderProducts(document.getElementById('shopSearch').value.trim());
+    });
+
+    renderProducts();
+  </script>
+</body>
+</html>
