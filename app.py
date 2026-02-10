@@ -1,7 +1,9 @@
 import json
 import re
+import socket
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote_plus
 
 from flask import Flask, redirect, render_template, request, session, url_for
 
@@ -19,8 +21,16 @@ def load_rules() -> dict:
         return json.load(file)
 
 
+def looks_like_domain_keyword(keyword: str) -> bool:
+    """
+    Domain-like keyword: letters/numbers/hyphen with no spaces.
+    Example: netflix, studentportal, flipkart, my-site
+    """
+    return bool(re.fullmatch(r"[a-z0-9-]+", keyword))
+
+
 def resolve_fake_site(keyword: str) -> str:
-    """Map keyword to fake clone route names."""
+    """Map suspicious input to the most realistic internal fake route."""
     k = keyword.strip().lower()
     if "google" in k:
         return "fake_google"
@@ -34,32 +44,33 @@ def resolve_fake_site(keyword: str) -> str:
 def classify_keyword(keyword: str, rules: dict) -> tuple[str, list[str]]:
     """
     Rule-based classification only (no AI/ML).
-    Returns: (classification, reasons)
+
+    NORMAL:
+      - letters, numbers, spaces, hyphens
+      - no suspicious symbols
+      - no restricted attack words
+
+    ABNORMAL:
+      - slashes, traversal markers, query/control symbols
+      - restricted terms (admin/login/root/config etc.)
+      - repeated suspicious attempts in a session
     """
     cleaned = keyword.strip().lower()
     reasons: list[str] = []
 
-    # Empty input is abnormal
     if not cleaned:
         reasons.append("empty_input")
 
-    # Explicit special character checks
     if any(symbol in cleaned for symbol in rules["abnormal_patterns"]["special_characters"]):
         reasons.append("contains_special_characters")
 
-    # Restricted terms
     if any(word in cleaned for word in rules["abnormal_patterns"]["restricted_keywords"]):
         reasons.append("contains_restricted_keyword")
 
-    # Pattern mismatch
+    # Normal text can include letters, numbers, spaces, and hyphens only.
     if not re.fullmatch(rules["allowed_pattern"], cleaned):
         reasons.append("pattern_mismatch")
 
-    # Whitelist-based normal behavior
-    if cleaned not in rules["allowed_keywords"]:
-        reasons.append("not_in_allowed_keywords")
-
-    # Repeated suspicious input count in the same session
     suspicious_count = session.get("suspicious_count", 0)
     if suspicious_count >= rules["thresholds"]["repeat_suspicious_count"]:
         reasons.append("repeated_suspicious_inputs")
@@ -69,18 +80,43 @@ def classify_keyword(keyword: str, rules: dict) -> tuple[str, list[str]]:
     return "normal", []
 
 
-def log_event(keyword: str, classification: str, destination: str) -> None:
-    """Write log line to logs.txt."""
+def domain_exists(hostname: str) -> bool:
+    """Best-effort DNS resolution to decide direct domain redirect vs search fallback."""
+    try:
+        socket.gethostbyname(hostname)
+        return True
+    except OSError:
+        return False
+
+
+def normal_redirect_target(keyword: str) -> str:
+    """
+    Real-site target for normal input.
+    - If domain-like and resolvable -> https://www.<keyword>.com
+    - Otherwise -> Google search fallback.
+    """
+    cleaned = keyword.strip().lower()
+
+    if looks_like_domain_keyword(cleaned):
+        host = f"www.{cleaned}.com"
+        if domain_exists(host):
+            return f"https://{host}"
+
+    return f"https://www.google.com/search?q={quote_plus(cleaned)}"
+
+
+def log_event(keyword: str, classification: str, target: str) -> None:
+    """Write a silent audit line to logs.txt."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with LOG_PATH.open("a", encoding="utf-8") as file:
         file.write(
-            f"[{timestamp}] keyword={keyword} classification={classification} destination={destination}\n"
+            f"[{timestamp}] keyword={keyword} classification={classification} target={target}\n"
         )
 
 
 @app.before_request
 def trap_abnormal_sessions():
-    """Once abnormal, keep all navigation inside fake-site routes."""
+    """Once marked abnormal, keep all navigation inside internal fake routes."""
     if not session.get("is_abnormal"):
         return None
 
@@ -109,7 +145,7 @@ def analyze():
     rules = load_rules()
     keyword = request.form.get("keyword", "").strip()
 
-    # If already abnormal, keep logging and trapping.
+    # Already trapped users always stay internal.
     if session.get("is_abnormal"):
         destination = resolve_fake_site(keyword)
         log_event(keyword, "abnormal", destination)
@@ -119,17 +155,11 @@ def analyze():
 
     if classification == "normal":
         session["suspicious_count"] = 0
-        if keyword.lower() == "google":
-            log_event(keyword, "normal", "https://www.google.com")
-            return redirect("https://www.google.com")
-        if keyword.lower() == "youtube":
-            log_event(keyword, "normal", "https://www.youtube.com")
-            return redirect("https://www.youtube.com")
-        if keyword.lower() == "amazon":
-            log_event(keyword, "normal", "https://www.amazon.com")
-            return redirect("https://www.amazon.com")
+        target = normal_redirect_target(keyword)
+        log_event(keyword, "normal", target)
+        return redirect(target)
 
-    # Mark abnormal, increment suspicious counter and trap user.
+    # First abnormal detection -> trap session.
     session["is_abnormal"] = True
     session["suspicious_count"] = session.get("suspicious_count", 0) + 1
     session["last_reasons"] = reasons

@@ -1,23 +1,19 @@
 # An Intelligent Cyber Defense Framework for Behavior-Based Intrusion Detection and Automated Attack Mitigation
 
 ## Project Concept
-This project is a production-style Flask web application for academic cyber-defense demonstration. The framework inspects user-entered website keywords, classifies behavior with **strict rule-based logic** (no AI/ML), and performs automated redirection:
+This Flask application demonstrates a behavior-driven cyber defense gateway for academic research.
+It classifies user-entered keywords with **rule-based logic only** (no AI/ML), then applies automated mitigation:
 
-- **Normal behavior** -> real websites (Google, YouTube, Amazon)
-- **Abnormal behavior** -> realistic internal fake clones
+- **Normal behavior** -> redirect to real external websites.
+- **Abnormal behavior** -> route into realistic internal cloned websites.
 
-Once a session is marked abnormal, all later navigation is contained in the fake website environment.
+Once abnormal behavior is detected, the user session is contained in fake routes.
 
-## Key Features
-- Rule-based behavior detection from `dataset.json`
-- Session-level abnormal-user containment
-- Realistic dark-theme fake website clones:
-  - Google-like search
-  - YouTube-like video listing
-  - Amazon-like product listing
-  - Generic modern dark landing for unknown abnormal inputs
-- File-based logging in `logs.txt`
-- No external APIs, no machine learning, no database
+## Core Design Goals
+- Do not rely on a hardcoded whitelist for normal users.
+- Accept natural everyday keywords (for example: `weather`, `music`, `student portal`).
+- Trigger deception only when clear malicious/suspicious patterns are detected.
+- Keep logging silent and never show logs on the UI.
 
 ## Project Structure
 ```text
@@ -39,62 +35,66 @@ Once a session is marked abnormal, all later navigation is contained in the fake
  └── README.md
 ```
 
-## Behavior Rules
-Rules are loaded from `dataset.json`.
+## Behavior Classification Rules (No AI/ML)
+Rules are stored in `dataset.json`.
 
-### Normal examples
-- `google`
-- `youtube`
-- `amazon`
+### Normal input
+Input is considered normal when it:
+- Uses letters/numbers/spaces/hyphens only.
+- Does not contain suspicious symbols like `/`, `..`, `?`, `%`, `=`.
+- Does not include restricted terms such as `admin`, `login`, `root`, `config`.
 
-### Abnormal examples
-- `google/`
-- `admin`
-- `login`
-- `..//`
-- Inputs with symbols like `?`, `%`, `=`
+### Abnormal input
+Input is considered abnormal when it:
+- Contains path/query symbols (`/`, `..`, `//`, `?`, `%`, `=`, `#`).
+- Includes restricted administrative words.
+- Violates the allowed text pattern.
+- Appears after repeated suspicious attempts in the same session.
 
-### Evaluation logic
-Input is abnormal when any of the following is true:
-1. Contains special/suspicious characters
-2. Contains restricted keywords
-3. Fails allowed regex pattern
-4. Not in allowed keyword list
-5. Repeated suspicious attempts in session exceed threshold
+## Redirection Logic
+For **normal** input:
+1. If input is domain-like and DNS resolves, redirect to:
+   `https://www.<keyword>.com`
+2. Otherwise fallback to:
+   `https://www.google.com/search?q=<keyword>`
 
-## How Deception Works
-1. User submits keyword from the index page.
-2. Flask evaluates keyword against JSON rules.
-3. If normal: user is redirected to the real site.
-4. If abnormal: user is routed to a matching fake clone.
-5. Session flag (`is_abnormal`) is set.
-6. `before_request` enforces containment inside fake routes.
+For **abnormal** input:
+- Redirect to one of the internal realistic clones:
+  - `/fake/google`
+  - `/fake/youtube`
+  - `/fake/amazon`
+  - `/fake/generic`
+
+## Session Containment
+- Flask session flag: `is_abnormal`
+- `before_request` guard ensures trapped users remain inside fake routes.
+- Normal users are not impacted.
 
 ## Logging
-`logs.txt` stores entries with:
+`logs.txt` stores silent audit records with:
 - timestamp
 - entered keyword
-- classification (`normal`/`abnormal`)
-- destination route/URL
+- classification (`normal` / `abnormal`)
+- redirection target
 
-Sample format:
+Example:
 ```text
-[2026-03-06 14:30:11] keyword=google/ classification=abnormal destination=fake_google
+[2026-03-06 14:30:11] keyword=google/ classification=abnormal target=fake_google
 ```
 
-## Run Instructions
-1. (Optional) Create virtual environment:
+## How to Run
+1. (Optional) Create venv:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 ```
 
-2. Install Flask:
+2. Install dependency:
 ```bash
 pip install Flask
 ```
 
-3. Run app:
+3. Start app:
 ```bash
 python app.py
 ```
@@ -105,6 +105,6 @@ http://localhost:5000
 ```
 
 ## Notes for Academic Demonstration
-- All detection logic is transparent and easy to explain in viva/demo.
-- UI is dark cyber-themed and polished for project screenshots.
-- Code is modular and commented for readability.
+- The code is modular and commented for report/viva explanation.
+- Deception behavior is realistic and invisible to normal users.
+- No external APIs or databases are used.
