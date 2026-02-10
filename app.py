@@ -10,90 +10,90 @@ DATASET_PATH = BASE_DIR / "dataset.json"
 LOG_PATH = BASE_DIR / "logs.txt"
 
 app = Flask(__name__)
-app.secret_key = "intelligent-cyber-defense-framework"
+app.secret_key = "academic-cyber-defense-framework-key"
 
 
 def load_rules() -> dict:
-    """Read and return the rule dataset from JSON."""
+    """Load behavior rules from dataset.json."""
     with DATASET_PATH.open("r", encoding="utf-8") as file:
         return json.load(file)
 
 
-def classify_input(keyword: str, rules: dict) -> tuple[str, list[str]]:
+def resolve_fake_site(keyword: str) -> str:
+    """Map keyword to fake clone route names."""
+    k = keyword.strip().lower()
+    if "google" in k:
+        return "fake_google"
+    if "youtube" in k:
+        return "fake_youtube"
+    if "amazon" in k:
+        return "fake_amazon"
+    return "fake_generic"
+
+
+def classify_keyword(keyword: str, rules: dict) -> tuple[str, list[str]]:
     """
-    Rule-based classifier (no AI/ML).
+    Rule-based classification only (no AI/ML).
     Returns: (classification, reasons)
-    classification in {"normal", "abnormal"}
     """
     cleaned = keyword.strip().lower()
     reasons: list[str] = []
 
+    # Empty input is abnormal
     if not cleaned:
         reasons.append("empty_input")
 
-    # Detect restricted/sensitive terms.
-    if any(term in cleaned for term in rules["restricted_keywords"]):
-        reasons.append("restricted_keyword")
+    # Explicit special character checks
+    if any(symbol in cleaned for symbol in rules["abnormal_patterns"]["special_characters"]):
+        reasons.append("contains_special_characters")
 
-    # Detect suspicious characters and symbols.
-    if any(symbol in cleaned for symbol in rules["abnormal_symbols"]):
-        reasons.append("suspicious_symbol")
+    # Restricted terms
+    if any(word in cleaned for word in rules["abnormal_patterns"]["restricted_keywords"]):
+        reasons.append("contains_restricted_keyword")
 
-    # Pattern mismatch check.
+    # Pattern mismatch
     if not re.fullmatch(rules["allowed_pattern"], cleaned):
         reasons.append("pattern_mismatch")
 
-    # Explicit allowed keyword check for strict behavior profile.
+    # Whitelist-based normal behavior
     if cleaned not in rules["allowed_keywords"]:
-        reasons.append("keyword_not_whitelisted")
+        reasons.append("not_in_allowed_keywords")
+
+    # Repeated suspicious input count in the same session
+    suspicious_count = session.get("suspicious_count", 0)
+    if suspicious_count >= rules["thresholds"]["repeat_suspicious_count"]:
+        reasons.append("repeated_suspicious_inputs")
 
     if reasons:
         return "abnormal", reasons
     return "normal", []
 
 
-def get_destination(keyword: str) -> str:
-    """Map keyword to fake destination route name."""
-    lowered = keyword.strip().lower()
-    if "google" in lowered:
-        return "fake_google"
-    if "youtube" in lowered:
-        return "fake_youtube"
-    if "amazon" in lowered:
-        return "fake_amazon"
-    return "fake_generic"
-
-
 def log_event(keyword: str, classification: str, destination: str) -> None:
-    """Append behavior event to logs.txt."""
+    """Write log line to logs.txt."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    entry = (
-        f"[{timestamp}] keyword={keyword} classification={classification} "
-        f"destination={destination}\n"
-    )
     with LOG_PATH.open("a", encoding="utf-8") as file:
-        file.write(entry)
+        file.write(
+            f"[{timestamp}] keyword={keyword} classification={classification} destination={destination}\n"
+        )
 
 
 @app.before_request
-def keep_abnormal_users_trapped():
-    """
-    Session guard: once abnormal, user stays in decoy environment.
-    This prevents escape to real destinations via index or other routes.
-    """
-    if not session.get("abnormal"):
+def trap_abnormal_sessions():
+    """Once abnormal, keep all navigation inside fake-site routes."""
+    if not session.get("is_abnormal"):
         return None
 
-    allowed_endpoints = {
+    allowed = {
+        "analyze",
         "fake_google",
         "fake_youtube",
         "fake_amazon",
         "fake_generic",
-        "fake_google_results",
-        "analyze",
         "static",
     }
-    if request.endpoint in allowed_endpoints:
+
+    if request.endpoint in allowed:
         return None
 
     return redirect(url_for("fake_generic"))
@@ -109,48 +109,39 @@ def analyze():
     rules = load_rules()
     keyword = request.form.get("keyword", "").strip()
 
-    # Already trapped users are always routed to fake environments.
-    if session.get("abnormal"):
-        destination = get_destination(keyword)
+    # If already abnormal, keep logging and trapping.
+    if session.get("is_abnormal"):
+        destination = resolve_fake_site(keyword)
         log_event(keyword, "abnormal", destination)
         return redirect(url_for(destination))
 
-    classification, _ = classify_input(keyword, rules)
+    classification, reasons = classify_keyword(keyword, rules)
 
     if classification == "normal":
+        session["suspicious_count"] = 0
         if keyword.lower() == "google":
-            destination = "https://www.google.com"
-            log_event(keyword, "normal", destination)
-            return redirect(destination)
+            log_event(keyword, "normal", "https://www.google.com")
+            return redirect("https://www.google.com")
         if keyword.lower() == "youtube":
-            destination = "https://www.youtube.com"
-            log_event(keyword, "normal", destination)
-            return redirect(destination)
+            log_event(keyword, "normal", "https://www.youtube.com")
+            return redirect("https://www.youtube.com")
         if keyword.lower() == "amazon":
-            destination = "https://www.amazon.com"
-            log_event(keyword, "normal", destination)
-            return redirect(destination)
+            log_event(keyword, "normal", "https://www.amazon.com")
+            return redirect("https://www.amazon.com")
 
-    # Anything else is treated as abnormal and trapped.
-    session["abnormal"] = True
-    destination_name = get_destination(keyword)
-    log_event(keyword, "abnormal", destination_name)
-    return redirect(url_for(destination_name))
+    # Mark abnormal, increment suspicious counter and trap user.
+    session["is_abnormal"] = True
+    session["suspicious_count"] = session.get("suspicious_count", 0) + 1
+    session["last_reasons"] = reasons
+
+    destination = resolve_fake_site(keyword)
+    log_event(keyword, "abnormal", destination)
+    return redirect(url_for(destination))
 
 
-@app.route("/fake/google", methods=["GET", "POST"])
+@app.route("/fake/google", methods=["GET"])
 def fake_google():
-    # Local result simulation stays inside fake environment.
-    if request.method == "POST":
-        query = request.form.get("query", "").strip()
-        return redirect(url_for("fake_google_results", q=query))
     return render_template("fake_google.html")
-
-
-@app.route("/fake/google/results", methods=["GET"])
-def fake_google_results():
-    query = request.args.get("q", "")
-    return render_template("fake_google_results.html", query=query)
 
 
 @app.route("/fake/youtube", methods=["GET"])

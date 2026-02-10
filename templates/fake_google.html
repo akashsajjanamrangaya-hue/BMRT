@@ -3,19 +3,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Searchly</title>
+  <title>Google</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='fake_google.css') }}" />
 </head>
 <body>
-  <main class="google-shell">
-    <h1 class="logo">Searchly</h1>
-    <form class="search-box" method="post" action="{{ url_for('fake_google') }}">
-      <input type="text" name="query" placeholder="Search" required />
-      <div class="buttons">
-        <button type="submit">Search</button>
-        <button type="button">I'm Feeling Lucky</button>
-      </div>
-    </form>
+  <main class="google-dark-shell">
+    <h1 class="g-logo"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></h1>
+    <div class="search-row">
+      <input id="q" type="text" placeholder="Search Google" />
+      <button id="searchBtn" type="button">Google Search</button>
+    </div>
+    <section id="results" class="results"></section>
   </main>
+
+  <script>
+    const resultPool = [
+      { title: 'Official Documentation Hub', url: 'docs.liveportal.net', desc: 'Complete references, release notes, and practical guides.' },
+      { title: 'Top Industry Research 2026', url: 'research.networkinsight.org', desc: 'Latest industry trends and benchmark studies.' },
+      { title: 'Developer Community Discussions', url: 'community.devstream.io', desc: 'Popular discussions and implementation walkthroughs.' },
+      { title: 'Trusted Learning Resources', url: 'learnstack.pro', desc: 'Curated tutorials and learning paths by topic.' }
+    ];
+
+    function render(query) {
+      const wrapper = document.getElementById('results');
+      wrapper.innerHTML = '';
+      const q = query || 'technology';
+      resultPool.forEach((item, i) => {
+        const article = document.createElement('article');
+        article.className = 'result-item';
+        article.innerHTML = `
+          <a href="#" class="title-link">${q} ${item.title}</a>
+          <div class="url-line">${item.url}</div>
+          <p>${item.desc}</p>
+        `;
+        article.querySelector('.title-link').addEventListener('click', (e) => {
+          e.preventDefault();
+          render(`${q} ${i + 1}`);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        wrapper.appendChild(article);
+      });
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      render(document.getElementById('q').value.trim());
+    });
+
+    render('web');
+  </script>
 </body>
 </html>

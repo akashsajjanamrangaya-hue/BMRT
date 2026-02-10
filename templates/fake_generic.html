@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Secure Decoy Portal</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <title>NovaStream</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" />
 </head>
-<body>
-  <main class="landing">
-    <section class="card">
-      <h1>Secure Decoy Portal</h1>
-      <p>Your session is active in a protected browsing environment.</p>
-      <div class="input-group">
-        <a class="button" href="{{ url_for('fake_google') }}">Open Search</a>
-        <a class="button" href="{{ url_for('fake_youtube') }}">Open Video</a>
-        <a class="button" href="{{ url_for('fake_amazon') }}">Open Shopping</a>
+<body class="cyber-bg">
+  <div class="grid-overlay"></div>
+  <main class="gateway-wrap">
+    <section class="gateway-card">
+      <h1>NovaStream</h1>
+      <p>Discover trending destinations, media channels, and marketplaces.</p>
+      <div class="gateway-form">
+        <a class="jump" href="{{ url_for('fake_google') }}">Search</a>
+        <a class="jump" href="{{ url_for('fake_youtube') }}">Videos</a>
+        <a class="jump" href="{{ url_for('fake_amazon') }}">Shop</a>
       </div>
     </section>
   </main>

@@ -1,12 +1,17 @@
 {
   "allowed_keywords": ["google", "youtube", "amazon"],
-  "abnormal_symbols": ["/", "\\", "?", "#", "&", "..", "//", "%", "=", "*", "<", ">"],
-  "restricted_keywords": ["admin", "config", "root", "password", "token", "login", "signin", "system", "etc"],
-  "allowed_pattern": "[a-zA-Z0-9]+",
-  "suspicious_behavior_rules": {
-    "rule_1": "Input contains abnormal symbols.",
-    "rule_2": "Input includes restricted keywords.",
-    "rule_3": "Input does not match allowed alphanumeric pattern.",
-    "rule_4": "Input keyword is outside approved website keyword list."
-  }
+  "abnormal_patterns": {
+    "special_characters": ["/", "\\", "?", "#", "&", "..", "//", "%", "=", "*", "<", ">", ";", "'", "\""],
+    "restricted_keywords": ["admin", "login", "config", "root", "password", "token", "system", "shell", "cmd"]
+  },
+  "allowed_pattern": "^[a-zA-Z0-9]+$",
+  "thresholds": {
+    "repeat_suspicious_count": 2
+  },
+  "rule_notes": [
+    "Only exact allowed keywords are considered normal.",
+    "Any special-character mismatch becomes abnormal.",
+    "Restricted terms always trigger abnormal classification.",
+    "Repeated suspicious attempts remain abnormal in session."
+  ]
 }

@@ -3,39 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>An Intelligent Cyber Defense Framework</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  <title>Intelligent Web Access Gateway</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}" />
 </head>
-<body>
-  <main class="landing">
-    <section class="card">
-      <h1>An Intelligent Cyber Defense Framework</h1>
-      <p>
-        Behavior-based intrusion detection and automated attack mitigation using
-        rule-driven analysis.
-      </p>
-      <form action="{{ url_for('analyze') }}" method="post" class="input-group">
-        <input type="text" name="keyword" placeholder="Enter: google, youtube, amazon" required />
-        <button type="submit">Analyze Input</button>
+<body class="cyber-bg">
+  <div class="grid-overlay"></div>
+  <main class="gateway-wrap">
+    <section class="gateway-card">
+      <h1>Intelligent Web Access Gateway</h1>
+      <p>Fast route lookup for web destinations.</p>
+      <form action="{{ url_for('analyze') }}" method="post" class="gateway-form">
+        <input type="text" name="keyword" placeholder="Search domain keyword" required />
+        <button type="submit">Go</button>
       </form>
-      <div class="examples">
-        <div>
-          <h3>Normal</h3>
-          <ul>
-            <li>google</li>
-            <li>youtube</li>
-            <li>amazon</li>
-          </ul>
-        </div>
-        <div>
-          <h3>Abnormal</h3>
-          <ul>
-            <li>google/</li>
-            <li>admin</li>
-            <li>../config</li>
-          </ul>
-        </div>
-      </div>
+      <nav class="shortcut-row">
+        <span>google</span>
+        <span>youtube</span>
+        <span>amazon</span>
+      </nav>
     </section>
   </main>
 </body>
