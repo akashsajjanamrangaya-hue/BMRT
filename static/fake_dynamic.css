@@ -1,0 +1,18 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, "Segoe UI", sans-serif; background: #050b18; color: #e2e8f0; }
+.topbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; padding:1rem 1.2rem; background:#0f172a; border-bottom:1px solid #1e293b; }
+.brand { font-size:1.4rem; font-weight:700; color:#22d3ee; letter-spacing:.2px; }
+.actions { display:flex; gap:.5rem; width:min(560px,100%); }
+.actions input { flex:1; border:1px solid #334155; background:#020617; color:#e2e8f0; border-radius:10px; padding:.65rem .8rem; }
+.actions button, .login-form button, .open-btn { border:none; background:#0e7490; color:#ecfeff; border-radius:10px; padding:.65rem .95rem; cursor:pointer; }
+.layout { width:min(1100px,95%); margin:1.2rem auto; display:grid; grid-template-columns:1.2fr 1fr; gap:1rem; }
+.hero, .grid .card { background:#0b1220; border:1px solid #22324a; border-radius:12px; padding:1rem; }
+.hero h1 { color:#67e8f9; margin-bottom:.5rem; }
+.hero p { color:#94a3b8; margin-bottom:.7rem; }
+.login-form { display:flex; gap:.6rem; flex-wrap:wrap; }
+.login-form input { flex:1 1 220px; border:1px solid #334155; background:#020617; color:#e2e8f0; border-radius:10px; padding:.6rem; }
+section h2 { color:#93c5fd; margin:.25rem 0 .6rem; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.7rem; }
+.card h3 { margin-bottom:.35rem; }
+.card p { color:#94a3b8; min-height:38px; margin-bottom:.5rem; }
+@media (max-width: 900px){ .layout{grid-template-columns:1fr;} }

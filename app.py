@@ -111,7 +111,16 @@ def resolve_fake_site(keyword: str) -> str:
         return "fake_youtube"
     if "amazon" in k or "shop" in k:
         return "fake_amazon"
-    return "fake_generic"
+    return "fake_dynamic"
+
+
+def extract_site_hint(keyword: str) -> str:
+    """Extract a safe site-like token for dynamic clone rendering."""
+    cleaned = re.sub(r"[^a-zA-Z0-9 -]", " ", keyword).strip().lower()
+    if not cleaned:
+        return "Web"
+    token = cleaned.split()[0]
+    return token[:24].title()
 
 
 def classify_keyword(keyword: str, rules: dict) -> tuple[str, list[str]]:
@@ -151,6 +160,7 @@ def trap_abnormal_sessions():
         "fake_youtube",
         "fake_amazon",
         "fake_generic",
+        "fake_dynamic",
         "static",
     }
     if request.endpoint in allowed:
@@ -173,6 +183,8 @@ def analyze():
         sid = ensure_abnormal_session()
         destination = resolve_fake_site(keyword)
         log_entry(sid, keyword, destination, "navigation", "post_analyze", "abnormal")
+        if destination == "fake_dynamic":
+            return redirect(url_for("fake_dynamic", site_name=extract_site_hint(keyword)))
         return redirect(url_for(destination))
 
     classification, reasons = classify_keyword(keyword, rules)
@@ -188,6 +200,8 @@ def analyze():
     sid = ensure_abnormal_session()
     destination = resolve_fake_site(keyword)
     log_entry(sid, keyword, destination, "classification", ",".join(reasons), "abnormal")
+    if destination == "fake_dynamic":
+        return redirect(url_for("fake_dynamic", site_name=extract_site_hint(keyword)))
     return redirect(url_for(destination))
 
 
@@ -262,6 +276,12 @@ def fake_youtube():
 def fake_amazon():
     product = request.args.get("product", "")
     return render_template("fake_amazon.html", product=product)
+
+
+@app.route("/fake/site/<site_name>", methods=["GET"])
+def fake_dynamic(site_name: str):
+    safe = re.sub(r"[^a-zA-Z0-9 -]", "", site_name).strip()[:24] or "Web"
+    return render_template("fake_dynamic.html", brand_name=safe.title())
 
 
 @app.route("/fake/generic", methods=["GET"])

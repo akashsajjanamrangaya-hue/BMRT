@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ brand_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fake_dynamic.css') }}" />
+</head>
+<body data-page="fake_dynamic">
+  <header class="topbar">
+    <div class="brand">{{ brand_name }}</div>
+    <div class="actions">
+      <input id="globalSearch" type="text" placeholder="Search {{ brand_name }}" />
+      <button id="searchBtn" type="button">Search</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="hero">
+      <h1>{{ brand_name }} Portal</h1>
+      <p>Explore trending services, media, and products.</p>
+      <form id="quickLogin" class="login-form">
+        <input type="email" name="email" placeholder="Email" />
+        <input type="password" name="password" placeholder="Password" />
+        <button type="submit">Continue</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Popular Destinations</h2>
+      <div id="cards" class="grid"></div>
+    </section>
+  </main>
+
+  <script>
+    window.ENABLE_TRACKING = true;
+    const entries = [
+      { title: 'Trending Videos', meta: 'Live updates and playlists' },
+      { title: 'Top Products', meta: 'Daily best picks and offers' },
+      { title: 'Community Feed', meta: 'Latest discussions and tips' },
+      { title: 'Account Center', meta: 'Sign-in and profile options' }
+    ];
+
+    function render(filter = '') {
+      const root = document.getElementById('cards');
+      root.innerHTML = '';
+      entries
+        .filter(item => item.title.toLowerCase().includes(filter.toLowerCase()))
+        .forEach((item, idx) => {
+          const node = document.createElement('article');
+          node.className = 'card';
+          node.innerHTML = `
+            <h3>${item.title}</h3>
+            <p>${item.meta}</p>
+            <button class="open-btn" data-key="${idx}">Open</button>
+          `;
+          root.appendChild(node);
+        });
+
+      root.querySelectorAll('.open-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          history.pushState({}, '', `?view=${btn.dataset.key}`);
+          render('');
+        });
+      });
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      render(document.getElementById('globalSearch').value.trim());
+    });
+
+    document.getElementById('quickLogin').addEventListener('submit', (e) => {
+      e.preventDefault();
+      render('account');
+    });
+
+    render();
+  </script>
+  <script src="{{ url_for('static', filename='tracker.js') }}"></script>
+</body>
+</html>

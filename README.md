@@ -31,6 +31,7 @@ Input is treated as abnormal when it includes:
   - Video-like environment (`/fake/youtube`)
   - Shopping-like environment (`/fake/amazon`)
   - Generic hub (`/fake/generic`)
+  - Dynamic brand-like clone (`/fake/site/<site_name>`) for other abnormal website intents
 
 ## High-Interaction Deception Features
 Inside abnormal flow, the system simulates:
@@ -93,12 +94,14 @@ The analytics view avoids exposing raw full sensitive input traces.
     fake_amazon.html
     fake_generic.html
     analytics.html
+    fake_dynamic.html
   static/
     main.css
     fake_google.css
     fake_youtube.css
     fake_amazon.css
     analytics.css
+    fake_dynamic.css
     tracker.js
   README.md
 ```
