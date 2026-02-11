@@ -3,78 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StreamTube</title>
+  <title>ViewTube</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='fake_youtube.css') }}" />
 </head>
 <body data-page="fake_video">
-  <header class="yt-dark-header">
-    <div class="yt-brand">StreamTube</div>
-    <div class="yt-search-box">
+  <header class="header">
+    <div class="brand">ViewTube</div>
+    <div class="search">
       <input id="ytSearch" type="text" placeholder="Search" />
       <button id="ytSearchBtn" type="button">Search</button>
     </div>
+    <button class="signin">Sign in</button>
   </header>
 
-  <main class="yt-grid">
-    <section class="yt-player-panel">
-      <div class="video-player-mock" id="playerArea">PLAYBACK</div>
-      <h2 id="videoTitle">Trending Clips</h2>
-      <p id="videoMeta">MediaChannel • 980K views</p>
+  <main class="layout">
+    <section class="player-panel">
+      <div class="player" id="playerArea">VIDEO PLAYER</div>
+      <h2 id="videoTitle">Recommended Videos</h2>
+      <p class="meta" id="videoMeta">Channel Studio • 1.1M views</p>
       <form id="commentForm" class="comment-form">
         <input type="text" name="comment" placeholder="Add a comment" />
-        <button type="submit">Post</button>
+        <button type="submit">Comment</button>
       </form>
     </section>
-    <aside class="yt-list" id="ytList"></aside>
+
+    <aside class="sidebar" id="ytList"></aside>
   </main>
 
   <script>
     window.ENABLE_TRACKING = true;
     const items = [
-      { id: 'v1', title: 'Modern Web Security Trends', channel: 'TechScope', views: '1.3M views', duration: '16:44' },
-      { id: 'v2', title: 'Cloud Automation Explained', channel: 'InfraCraft', views: '920K views', duration: '12:13' },
-      { id: 'v3', title: 'Frontend Performance Deep Dive', channel: 'RenderLab', views: '670K views', duration: '21:05' },
-      { id: 'v4', title: 'System Design in Practice', channel: 'CodeArena', views: '480K views', duration: '18:22' }
+      { id: 'v1', title: 'Cloud Security Best Practices', channel: 'InfraLab', views: '1.1M views', duration: '14:22' },
+      { id: 'v2', title: 'Web Monitoring Playbook', channel: 'OpsWorld', views: '860K views', duration: '11:08' },
+      { id: 'v3', title: 'Performance Engineering Deep Dive', channel: 'RenderWorks', views: '602K views', duration: '19:43' },
+      { id: 'v4', title: 'System Architecture in Action', channel: 'CorePatterns', views: '470K views', duration: '16:54' }
     ];
 
-    function openVideo(v) {
+    function play(v) {
       document.getElementById('playerArea').textContent = 'NOW PLAYING';
       document.getElementById('videoTitle').textContent = v.title;
       document.getElementById('videoMeta').textContent = `${v.channel} • ${v.views}`;
       history.pushState({}, '', `?video=${encodeURIComponent(v.id)}`);
     }
 
-    function draw(filter = '') {
-      const list = document.getElementById('ytList');
-      list.innerHTML = '';
-      items
-        .filter(v => v.title.toLowerCase().includes(filter.toLowerCase()))
-        .forEach(v => {
-          const node = document.createElement('a');
-          node.href = '#';
-          node.className = 'yt-card';
-          node.innerHTML = `
-            <div class="thumb"><span>${v.duration}</span></div>
-            <div><h3>${v.title}</h3><p>${v.channel}</p><p class="muted">${v.views}</p></div>
-          `;
-          node.addEventListener('click', (e) => {
-            e.preventDefault();
-            openVideo(v);
-          });
-          list.appendChild(node);
-        });
+    function render(filter = '') {
+      const root = document.getElementById('ytList');
+      root.innerHTML = '';
+      items.filter(v => v.title.toLowerCase().includes(filter.toLowerCase())).forEach(v => {
+        const card = document.createElement('a');
+        card.href = '#';
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="thumb"><span>${v.duration}</span></div>
+          <div><h3>${v.title}</h3><p>${v.channel}</p><p class="muted">${v.views}</p></div>
+        `;
+        card.addEventListener('click', (e) => { e.preventDefault(); play(v); });
+        root.appendChild(card);
+      });
     }
 
-    document.getElementById('ytSearchBtn').addEventListener('click', () => {
-      draw(document.getElementById('ytSearch').value.trim());
-    });
+    document.getElementById('ytSearchBtn').addEventListener('click', () => render(document.getElementById('ytSearch').value.trim()));
+    document.getElementById('commentForm').addEventListener('submit', (e) => { e.preventDefault(); document.getElementById('playerArea').textContent = 'COMMENT SAVED'; });
 
-    document.getElementById('commentForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      document.getElementById('playerArea').textContent = 'COMMENT POSTED';
-    });
-
-    draw();
+    render();
   </script>
   <script src="{{ url_for('static', filename='tracker.js') }}"></script>
 </body>

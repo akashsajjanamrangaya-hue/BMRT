@@ -3,28 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MarketBay</title>
+  <title>Amazin</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='fake_amazon.css') }}" />
 </head>
 <body data-page="fake_shop">
-  <header class="amz-header">
-    <div class="amz-brand">marketbay</div>
-    <div class="amz-search">
+  <header class="top-header">
+    <div class="brand">amazin</div>
+    <div class="search-wrap">
+      <select>
+        <option>All</option>
+        <option>Electronics</option>
+        <option>Books</option>
+      </select>
       <input id="amzSearch" type="text" placeholder="Search products" />
       <button id="amzSearchBtn" type="button">Search</button>
     </div>
+    <div class="menu">Account &amp; Lists</div>
+    <div class="menu">Returns &amp; Orders</div>
+    <div class="menu">Cart</div>
   </header>
 
-  <main class="amz-main">
-    <h2>Recommended Items</h2>
-    <section id="productGrid" class="product-grid"></section>
+  <nav class="subnav">
+    <a href="#">Today's Deals</a>
+    <a href="#">Customer Service</a>
+    <a href="#">Gift Cards</a>
+    <a href="#">Sell</a>
+  </nav>
 
-    <section class="mini-login">
-      <h3>Sign in</h3>
+  <main class="main">
+    <h2>Featured Products</h2>
+    <section id="productGrid" class="grid"></section>
+
+    <section class="signin-card">
+      <h3>Sign in for a better experience</h3>
       <form id="shopLogin">
         <input type="email" name="email" placeholder="Email" />
         <input type="password" name="password" placeholder="Password" />
-        <button type="submit">Continue</button>
+        <button type="submit">Sign in</button>
       </form>
     </section>
   </main>
@@ -39,45 +54,37 @@
       { id:'p5', name: 'Mesh Wi-Fi Router Pro', price: '$149.00', rating: '4.5' }
     ];
 
-    function renderProducts(filter = '') {
-      const grid = document.getElementById('productGrid');
-      grid.innerHTML = '';
-      products
-        .filter(p => p.name.toLowerCase().includes(filter.toLowerCase()))
-        .forEach((p, idx) => {
-          const card = document.createElement('article');
-          card.className = 'product-card';
-          card.innerHTML = `
-            <a href="#" class="product-link" data-id="${p.id}">
-              <div class="img-box">IMG ${idx + 1}</div>
-              <h3>${p.name}</h3>
-              <p class="price">${p.price}</p>
-              <p class="rating">${p.rating} ★</p>
-            </a>
-            <button type="button" class="cart-btn">Add to Cart</button>
-          `;
-          grid.appendChild(card);
-        });
+    function render(filter = '') {
+      const root = document.getElementById('productGrid');
+      root.innerHTML = '';
+      products.filter(p => p.name.toLowerCase().includes(filter.toLowerCase())).forEach((p, idx) => {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <a href="#" class="product-link" data-id="${p.id}">
+            <div class="img-box">IMG ${idx + 1}</div>
+            <h3>${p.name}</h3>
+            <p class="rating">${p.rating} ★★★★★</p>
+            <p class="price">${p.price}</p>
+          </a>
+          <button type="button" class="cart">Add to Cart</button>
+        `;
+        root.appendChild(card);
+      });
 
-      grid.querySelectorAll('.product-link').forEach((link) => {
+      root.querySelectorAll('.product-link').forEach(link => {
         link.addEventListener('click', (e) => {
           e.preventDefault();
           history.pushState({}, '', `?product=${encodeURIComponent(link.dataset.id)}`);
-          renderProducts(link.textContent.trim().split(' ')[0]);
+          render(link.textContent.trim().split(' ')[0]);
         });
       });
     }
 
-    document.getElementById('amzSearchBtn').addEventListener('click', () => {
-      renderProducts(document.getElementById('amzSearch').value.trim());
-    });
+    document.getElementById('amzSearchBtn').addEventListener('click', () => render(document.getElementById('amzSearch').value.trim()));
+    document.getElementById('shopLogin').addEventListener('submit', (e) => { e.preventDefault(); render(''); });
 
-    document.getElementById('shopLogin').addEventListener('submit', (e) => {
-      e.preventDefault();
-      renderProducts('');
-    });
-
-    renderProducts();
+    render();
   </script>
   <script src="{{ url_for('static', filename='tracker.js') }}"></script>
 </body>

@@ -7,65 +7,74 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='fake_google.css') }}" />
 </head>
 <body data-page="fake_search">
-  <main class="google-dark-shell">
-    <h1 class="g-logo"><span>S</span><span>e</span><span>a</span><span>r</span><span>c</span><span>h</span></h1>
-    <div class="search-row">
-      <input id="q" type="text" placeholder="Search" />
-      <button id="searchBtn" type="button">Search</button>
+  <header class="topbar">
+    <a class="logo-small" href="{{ url_for('fake_google') }}">Gofind</a>
+    <div class="search-wrap">
+      <input id="qTop" type="text" placeholder="Search" />
+      <button id="topSearch" type="button">Search</button>
+    </div>
+  </header>
+
+  <main class="shell" id="homeShell">
+    <h1 class="logo-main">Gofind</h1>
+    <div class="hero-search">
+      <input id="q" type="text" placeholder="Search the web" />
+      <div class="btn-row">
+        <button id="searchBtn" type="button">Search</button>
+        <button id="luckyBtn" type="button">Lucky</button>
+      </div>
     </div>
 
-    <section class="mini-login">
-      <h3>Account</h3>
+    <section class="signin-card">
+      <h3>Sign in</h3>
       <form id="loginForm">
         <input type="email" name="email" placeholder="Email" />
         <input type="password" name="password" placeholder="Password" />
-        <button type="submit">Sign in</button>
+        <button type="submit">Continue</button>
       </form>
     </section>
-
-    <section id="results" class="results"></section>
   </main>
+
+  <section id="results" class="results hidden"></section>
 
   <script>
     window.ENABLE_TRACKING = true;
-    const resultPool = [
-      { title: 'Official Documentation Hub', url: 'docs.portalhub.net', desc: 'Trusted references, release notes and implementation guides.' },
-      { title: 'Research Articles', url: 'insight-research.org', desc: 'Technical summaries and trend analysis reports.' },
-      { title: 'Community Discussions', url: 'community-threads.net', desc: 'Popular discussions, tutorials, and how-to posts.' },
-      { title: 'Learning Resources', url: 'learn-central.io', desc: 'Structured content tracks for practical learning.' }
+
+    const pool = [
+      { title: 'Developer Documentation Center', url: 'devdocs-hub.net', desc: 'API guides, integration examples, and release updates.' },
+      { title: 'Knowledge Repository', url: 'knowledge-stream.org', desc: 'Long-form references and practical deep dives.' },
+      { title: 'Community Answers', url: 'forum-lab.io', desc: 'Discussions and practical troubleshooting threads.' },
+      { title: 'Learning Portal', url: 'learnroute.app', desc: 'Structured learning tracks and quick-start tutorials.' }
     ];
 
-    function render(query) {
-      const root = document.getElementById('results');
-      root.innerHTML = '';
+    function openResults(query) {
       const q = query || 'technology';
-      resultPool.forEach((item, index) => {
+      document.getElementById('homeShell').classList.add('hidden');
+      const root = document.getElementById('results');
+      root.classList.remove('hidden');
+      root.innerHTML = '';
+
+      pool.forEach((item, idx) => {
         const node = document.createElement('article');
         node.className = 'result-item';
         node.innerHTML = `
-          <a href="#" class="title-link">${item.title}</a>
+          <a href="#" class="title-link">${q} ${item.title}</a>
           <div class="url-line">${item.url}</div>
           <p>${item.desc}</p>
-          <button class="open-btn" data-query="${q} ${index + 1}">Open</button>
         `;
+        node.querySelector('.title-link').addEventListener('click', (e) => {
+          e.preventDefault();
+          openResults(`${q} ${idx + 1}`);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
         root.appendChild(node);
-      });
-
-      root.querySelectorAll('.open-btn').forEach((btn) => {
-        btn.addEventListener('click', () => render(btn.dataset.query));
       });
     }
 
-    document.getElementById('searchBtn').addEventListener('click', () => {
-      render(document.getElementById('q').value.trim());
-    });
-
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
-      e.preventDefault();
-      render('account center');
-    });
-
-    render('web');
+    document.getElementById('searchBtn').addEventListener('click', () => openResults(document.getElementById('q').value.trim()));
+    document.getElementById('topSearch').addEventListener('click', () => openResults(document.getElementById('qTop').value.trim()));
+    document.getElementById('luckyBtn').addEventListener('click', () => openResults('trending'));
+    document.getElementById('loginForm').addEventListener('submit', (e) => { e.preventDefault(); openResults('account'); });
   </script>
   <script src="{{ url_for('static', filename='tracker.js') }}"></script>
 </body>

@@ -43,6 +43,7 @@ Inside abnormal flow, the system simulates:
 - local-only route transitions.
 
 No copyrighted assets or external site resources are used.
+The interfaces use high-fidelity, similar layout patterns without copying official copyrighted assets.
 
 ## Full Behavioral Monitoring
 For abnormal sessions, frontend JavaScript sends interaction events to Flask using AJAX (`/interaction`).
