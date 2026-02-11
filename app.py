@@ -1,87 +1,90 @@
 import json
 import re
 import socket
+import uuid
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote_plus
 
-from flask import Flask, redirect, render_template, request, session, url_for
+from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
 BASE_DIR = Path(__file__).resolve().parent
 DATASET_PATH = BASE_DIR / "dataset.json"
 LOG_PATH = BASE_DIR / "logs.txt"
 
 app = Flask(__name__)
-app.secret_key = "academic-cyber-defense-framework-key"
+app.secret_key = "research-deception-framework-key"
 
 
 def load_rules() -> dict:
-    """Load behavior rules from dataset.json."""
+    """Load rule-based detection settings."""
     with DATASET_PATH.open("r", encoding="utf-8") as file:
         return json.load(file)
 
 
+def now_utc() -> datetime:
+    return datetime.utcnow()
+
+
+def ensure_abnormal_session() -> str:
+    """Create and store a unique session identifier for abnormal sessions."""
+    sid = session.get("abnormal_session_id")
+    if not sid:
+        sid = f"Session_{uuid.uuid4().hex[:8]}"
+        session["abnormal_session_id"] = sid
+        session["abnormal_started_at"] = now_utc().isoformat()
+        session["last_action_at"] = now_utc().isoformat()
+    return sid
+
+
+def parse_iso(ts: str | None) -> datetime | None:
+    if not ts:
+        return None
+    try:
+        return datetime.fromisoformat(ts)
+    except ValueError:
+        return None
+
+
+def timing_metrics() -> tuple[float, float]:
+    """Return (seconds_between_actions, session_duration_seconds)."""
+    current = now_utc()
+    last = parse_iso(session.get("last_action_at"))
+    started = parse_iso(session.get("abnormal_started_at"))
+
+    between = (current - last).total_seconds() if last else 0.0
+    duration = (current - started).total_seconds() if started else 0.0
+
+    session["last_action_at"] = current.isoformat()
+    return round(max(between, 0.0), 3), round(max(duration, 0.0), 3)
+
+
+def log_entry(
+    session_id: str,
+    entered_keyword: str,
+    page: str,
+    action: str,
+    input_value: str,
+    classification: str,
+) -> None:
+    """Write structured monitoring line to logs.txt."""
+    timestamp = now_utc().strftime("%Y-%m-%d %H:%M:%S")
+    between, duration = timing_metrics() if classification == "abnormal" else (0.0, 0.0)
+    line = (
+        f"{timestamp} | {session_id} | {entered_keyword} | {page} | {action} | "
+        f"{input_value} | between={between}s | session={duration}s | {classification}\n"
+    )
+    with LOG_PATH.open("a", encoding="utf-8") as file:
+        file.write(line)
+
+
 def looks_like_domain_keyword(keyword: str) -> bool:
-    """
-    Domain-like keyword: letters/numbers/hyphen with no spaces.
-    Example: netflix, studentportal, flipkart, my-site
-    """
+    """Domain-like keyword: letters/numbers/hyphen with no spaces."""
     return bool(re.fullmatch(r"[a-z0-9-]+", keyword))
 
 
-def resolve_fake_site(keyword: str) -> str:
-    """Map suspicious input to the most realistic internal fake route."""
-    k = keyword.strip().lower()
-    if "google" in k:
-        return "fake_google"
-    if "youtube" in k:
-        return "fake_youtube"
-    if "amazon" in k:
-        return "fake_amazon"
-    return "fake_generic"
-
-
-def classify_keyword(keyword: str, rules: dict) -> tuple[str, list[str]]:
-    """
-    Rule-based classification only (no AI/ML).
-
-    NORMAL:
-      - letters, numbers, spaces, hyphens
-      - no suspicious symbols
-      - no restricted attack words
-
-    ABNORMAL:
-      - slashes, traversal markers, query/control symbols
-      - restricted terms (admin/login/root/config etc.)
-      - repeated suspicious attempts in a session
-    """
-    cleaned = keyword.strip().lower()
-    reasons: list[str] = []
-
-    if not cleaned:
-        reasons.append("empty_input")
-
-    if any(symbol in cleaned for symbol in rules["abnormal_patterns"]["special_characters"]):
-        reasons.append("contains_special_characters")
-
-    if any(word in cleaned for word in rules["abnormal_patterns"]["restricted_keywords"]):
-        reasons.append("contains_restricted_keyword")
-
-    # Normal text can include letters, numbers, spaces, and hyphens only.
-    if not re.fullmatch(rules["allowed_pattern"], cleaned):
-        reasons.append("pattern_mismatch")
-
-    suspicious_count = session.get("suspicious_count", 0)
-    if suspicious_count >= rules["thresholds"]["repeat_suspicious_count"]:
-        reasons.append("repeated_suspicious_inputs")
-
-    if reasons:
-        return "abnormal", reasons
-    return "normal", []
-
-
 def domain_exists(hostname: str) -> bool:
-    """Best-effort DNS resolution to decide direct domain redirect vs search fallback."""
     try:
         socket.gethostbyname(hostname)
         return True
@@ -90,48 +93,68 @@ def domain_exists(hostname: str) -> bool:
 
 
 def normal_redirect_target(keyword: str) -> str:
-    """
-    Real-site target for normal input.
-    - If domain-like and resolvable -> https://www.<keyword>.com
-    - Otherwise -> Google search fallback.
-    """
+    """Redirect normal traffic to real websites with search fallback."""
     cleaned = keyword.strip().lower()
-
     if looks_like_domain_keyword(cleaned):
         host = f"www.{cleaned}.com"
         if domain_exists(host):
             return f"https://{host}"
-
     return f"https://www.google.com/search?q={quote_plus(cleaned)}"
 
 
-def log_event(keyword: str, classification: str, target: str) -> None:
-    """Write a silent audit line to logs.txt."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with LOG_PATH.open("a", encoding="utf-8") as file:
-        file.write(
-            f"[{timestamp}] keyword={keyword} classification={classification} target={target}\n"
-        )
+def resolve_fake_site(keyword: str) -> str:
+    """Map suspicious intent to realistic high-interaction clone."""
+    k = keyword.strip().lower()
+    if "google" in k or "search" in k:
+        return "fake_google"
+    if "youtube" in k or "video" in k:
+        return "fake_youtube"
+    if "amazon" in k or "shop" in k:
+        return "fake_amazon"
+    return "fake_generic"
+
+
+def classify_keyword(keyword: str, rules: dict) -> tuple[str, list[str]]:
+    """Rule-based classification: only clear suspicious patterns become abnormal."""
+    cleaned = keyword.strip().lower()
+    reasons: list[str] = []
+
+    if not cleaned:
+        reasons.append("empty_input")
+
+    if any(token in cleaned for token in rules["abnormal_patterns"]["special_characters"]):
+        reasons.append("special_characters")
+
+    if any(word in cleaned for word in rules["abnormal_patterns"]["restricted_keywords"]):
+        reasons.append("restricted_keyword")
+
+    if not re.fullmatch(rules["allowed_pattern"], cleaned):
+        reasons.append("pattern_mismatch")
+
+    if session.get("suspicious_count", 0) >= rules["thresholds"]["repeat_suspicious_count"]:
+        reasons.append("repeated_suspicious_inputs")
+
+    return ("abnormal", reasons) if reasons else ("normal", [])
 
 
 @app.before_request
 def trap_abnormal_sessions():
-    """Once marked abnormal, keep all navigation inside internal fake routes."""
+    """Once abnormal, keep session inside local high-interaction environment."""
     if not session.get("is_abnormal"):
         return None
 
     allowed = {
         "analyze",
+        "interaction_log",
+        "analytics",
         "fake_google",
         "fake_youtube",
         "fake_amazon",
         "fake_generic",
         "static",
     }
-
     if request.endpoint in allowed:
         return None
-
     return redirect(url_for("fake_generic"))
 
 
@@ -144,29 +167,84 @@ def index():
 def analyze():
     rules = load_rules()
     keyword = request.form.get("keyword", "").strip()
+    session["entered_keyword"] = keyword
 
-    # Already trapped users always stay internal.
     if session.get("is_abnormal"):
+        sid = ensure_abnormal_session()
         destination = resolve_fake_site(keyword)
-        log_event(keyword, "abnormal", destination)
+        log_entry(sid, keyword, destination, "navigation", "post_analyze", "abnormal")
         return redirect(url_for(destination))
 
     classification, reasons = classify_keyword(keyword, rules)
-
     if classification == "normal":
-        session["suspicious_count"] = 0
         target = normal_redirect_target(keyword)
-        log_event(keyword, "normal", target)
+        session["suspicious_count"] = 0
+        log_entry("Session_Normal", keyword, "gateway", "redirect", target, "normal")
         return redirect(target)
 
-    # First abnormal detection -> trap session.
     session["is_abnormal"] = True
     session["suspicious_count"] = session.get("suspicious_count", 0) + 1
-    session["last_reasons"] = reasons
-
+    session["abnormal_reasons"] = reasons
+    sid = ensure_abnormal_session()
     destination = resolve_fake_site(keyword)
-    log_event(keyword, "abnormal", destination)
+    log_entry(sid, keyword, destination, "classification", ",".join(reasons), "abnormal")
     return redirect(url_for(destination))
+
+
+@app.route("/interaction", methods=["POST"])
+def interaction_log():
+    """Receive frontend interaction events via AJAX and store behavior trace."""
+    if not session.get("is_abnormal"):
+        return jsonify({"status": "ignored"})
+
+    payload = request.get_json(silent=True) or {}
+    sid = ensure_abnormal_session()
+    entered_keyword = session.get("entered_keyword", "-")
+
+    page = str(payload.get("page", "unknown"))[:80]
+    action = str(payload.get("action", "unknown"))[:120]
+    value = str(payload.get("value", ""))[:120]
+
+    log_entry(sid, entered_keyword, page, action, value, "abnormal")
+    return jsonify({"status": "ok"})
+
+
+@app.route("/analytics", methods=["GET"])
+def analytics():
+    """Read-only aggregated analytics for abnormal behavior monitoring."""
+    session_counts: Counter[str] = Counter()
+    keyword_counts: Counter[str] = Counter()
+    month_counts: Counter[str] = Counter()
+
+    for line in LOG_PATH.read_text(encoding="utf-8").splitlines() if LOG_PATH.exists() else []:
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) < 9:
+            continue
+        timestamp, sid, keyword, *_rest, classification = parts
+        if classification != "abnormal":
+            continue
+
+        session_counts[sid] += 1
+        if keyword and keyword != "-":
+            keyword_counts[keyword.lower()] += 1
+
+        try:
+            month_counts[datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m")] += 1
+        except ValueError:
+            continue
+
+    top_terms = [term for term, _ in keyword_counts.most_common(5)]
+    month_labels = sorted(month_counts.keys())
+    month_values = [month_counts[m] for m in month_labels]
+
+    return render_template(
+        "analytics.html",
+        total_abnormal_sessions=len(session_counts),
+        interactions_by_session=dict(session_counts),
+        top_terms=top_terms,
+        month_labels=month_labels,
+        month_values=month_values,
+    )
 
 
 @app.route("/fake/google", methods=["GET"])
@@ -176,12 +254,14 @@ def fake_google():
 
 @app.route("/fake/youtube", methods=["GET"])
 def fake_youtube():
-    return render_template("fake_youtube.html")
+    video = request.args.get("video", "")
+    return render_template("fake_youtube.html", video=video)
 
 
 @app.route("/fake/amazon", methods=["GET"])
 def fake_amazon():
-    return render_template("fake_amazon.html")
+    product = request.args.get("product", "")
+    return render_template("fake_amazon.html", product=product)
 
 
 @app.route("/fake/generic", methods=["GET"])

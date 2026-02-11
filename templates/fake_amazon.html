@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Amazon</title>
+  <title>MarketBay</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='fake_amazon.css') }}" />
 </head>
-<body>
+<body data-page="fake_shop">
   <header class="amz-header">
-    <div class="amz-brand">amazon</div>
+    <div class="amz-brand">marketbay</div>
     <div class="amz-search">
       <input id="amzSearch" type="text" placeholder="Search products" />
       <button id="amzSearchBtn" type="button">Search</button>
@@ -16,17 +16,27 @@
   </header>
 
   <main class="amz-main">
-    <h2>Today's Recommendations</h2>
+    <h2>Recommended Items</h2>
     <section id="productGrid" class="product-grid"></section>
+
+    <section class="mini-login">
+      <h3>Sign in</h3>
+      <form id="shopLogin">
+        <input type="email" name="email" placeholder="Email" />
+        <input type="password" name="password" placeholder="Password" />
+        <button type="submit">Continue</button>
+      </form>
+    </section>
   </main>
 
   <script>
+    window.ENABLE_TRACKING = true;
     const products = [
-      { name: 'Wireless Mechanical Keyboard', price: '$89.99', rating: '4.6' },
-      { name: 'Ultra HD Streaming Camera', price: '$69.49', rating: '4.4' },
-      { name: 'Noise Cancel Smart Headset', price: '$129.00', rating: '4.8' },
-      { name: 'Portable SSD 1TB', price: '$99.90', rating: '4.7' },
-      { name: 'Mesh Wi-Fi Router Pro', price: '$149.00', rating: '4.5' }
+      { id:'p1', name: 'Wireless Mechanical Keyboard', price: '$89.99', rating: '4.6' },
+      { id:'p2', name: 'Ultra HD Streaming Camera', price: '$69.49', rating: '4.4' },
+      { id:'p3', name: 'Noise Cancel Smart Headset', price: '$129.00', rating: '4.8' },
+      { id:'p4', name: 'Portable SSD 1TB', price: '$99.90', rating: '4.7' },
+      { id:'p5', name: 'Mesh Wi-Fi Router Pro', price: '$149.00', rating: '4.5' }
     ];
 
     function renderProducts(filter = '') {
@@ -38,27 +48,37 @@
           const card = document.createElement('article');
           card.className = 'product-card';
           card.innerHTML = `
-            <a href="#" class="product-link">
+            <a href="#" class="product-link" data-id="${p.id}">
               <div class="img-box">IMG ${idx + 1}</div>
               <h3>${p.name}</h3>
               <p class="price">${p.price}</p>
               <p class="rating">${p.rating} ★</p>
             </a>
-            <button type="button">Add to Cart</button>
+            <button type="button" class="cart-btn">Add to Cart</button>
           `;
-          card.querySelector('.product-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            renderProducts(p.name.split(' ')[0]);
-          });
           grid.appendChild(card);
         });
+
+      grid.querySelectorAll('.product-link').forEach((link) => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          history.pushState({}, '', `?product=${encodeURIComponent(link.dataset.id)}`);
+          renderProducts(link.textContent.trim().split(' ')[0]);
+        });
+      });
     }
 
     document.getElementById('amzSearchBtn').addEventListener('click', () => {
       renderProducts(document.getElementById('amzSearch').value.trim());
     });
 
+    document.getElementById('shopLogin').addEventListener('submit', (e) => {
+      e.preventDefault();
+      renderProducts('');
+    });
+
     renderProducts();
   </script>
+  <script src="{{ url_for('static', filename='tracker.js') }}"></script>
 </body>
 </html>

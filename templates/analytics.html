@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Behavior Monitoring Analytics</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='analytics.css') }}" />
+</head>
+<body>
+  <main class="analytics-wrap">
+    <h1>Behavior Monitoring Analytics</h1>
+    <section class="cards">
+      <article><h3>Total Abnormal Sessions</h3><p>{{ total_abnormal_sessions }}</p></article>
+      <article><h3>Most Searched Terms</h3><p>{{ top_terms | join(', ') if top_terms else 'N/A' }}</p></article>
+    </section>
+
+    <section class="panel">
+      <h2>Interactions per Session</h2>
+      <div class="session-list">
+        {% for sid, count in interactions_by_session.items() %}
+          <div class="row"><span>{{ sid }}</span><span>{{ count }}</span></div>
+        {% else %}
+          <div class="row"><span>No abnormal sessions</span><span>0</span></div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Monthly Abnormal Trend</h2>
+      <canvas id="monthlyChart" width="980" height="380"></canvas>
+    </section>
+  </main>
+
+  <script>
+    const labels = {{ month_labels | tojson }};
+    const values = {{ month_values | tojson }};
+    const canvas = document.getElementById('monthlyChart');
+    const ctx = canvas.getContext('2d');
+
+    function draw(labels, values) {
+      const m = { top: 24, right: 20, bottom: 60, left: 60 };
+      const w = canvas.width - m.left - m.right;
+      const h = canvas.height - m.top - m.bottom;
+      const ox = m.left;
+      const oy = m.top + h;
+
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.fillStyle = '#0b1220';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      ctx.strokeStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(ox,m.top); ctx.lineTo(ox,oy); ctx.lineTo(ox+w,oy); ctx.stroke();
+
+      if (!labels.length) {
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('No abnormal data available.', ox + 20, oy - 20);
+        return;
+      }
+
+      const max = Math.max(...values, 1);
+      const points = labels.map((label, i) => ({
+        x: ox + (i * (w / Math.max(labels.length - 1, 1))),
+        y: oy - ((values[i] / max) * h),
+        label,
+        value: values[i]
+      }));
+
+      ctx.strokeStyle = '#22d3ee';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.stroke();
+
+      points.forEach((p) => {
+        ctx.fillStyle = '#22d3ee';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText(String(p.value), p.x - 4, p.y - 8);
+        ctx.save();
+        ctx.translate(p.x, oy + 18);
+        ctx.rotate(-0.5);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(p.label, 0, 0);
+        ctx.restore();
+      });
+    }
+    draw(labels, values);
+  </script>
+</body>
+</html>

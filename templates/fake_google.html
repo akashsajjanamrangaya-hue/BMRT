@@ -3,45 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Google</title>
+  <title>Search</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='fake_google.css') }}" />
 </head>
-<body>
+<body data-page="fake_search">
   <main class="google-dark-shell">
-    <h1 class="g-logo"><span>G</span><span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></h1>
+    <h1 class="g-logo"><span>S</span><span>e</span><span>a</span><span>r</span><span>c</span><span>h</span></h1>
     <div class="search-row">
-      <input id="q" type="text" placeholder="Search Google" />
-      <button id="searchBtn" type="button">Google Search</button>
+      <input id="q" type="text" placeholder="Search" />
+      <button id="searchBtn" type="button">Search</button>
     </div>
+
+    <section class="mini-login">
+      <h3>Account</h3>
+      <form id="loginForm">
+        <input type="email" name="email" placeholder="Email" />
+        <input type="password" name="password" placeholder="Password" />
+        <button type="submit">Sign in</button>
+      </form>
+    </section>
+
     <section id="results" class="results"></section>
   </main>
 
   <script>
+    window.ENABLE_TRACKING = true;
     const resultPool = [
-      { title: 'Official Documentation Hub', url: 'docs.liveportal.net', desc: 'Complete references, release notes, and practical guides.' },
-      { title: 'Top Industry Research 2026', url: 'research.networkinsight.org', desc: 'Latest industry trends and benchmark studies.' },
-      { title: 'Developer Community Discussions', url: 'community.devstream.io', desc: 'Popular discussions and implementation walkthroughs.' },
-      { title: 'Trusted Learning Resources', url: 'learnstack.pro', desc: 'Curated tutorials and learning paths by topic.' }
+      { title: 'Official Documentation Hub', url: 'docs.portalhub.net', desc: 'Trusted references, release notes and implementation guides.' },
+      { title: 'Research Articles', url: 'insight-research.org', desc: 'Technical summaries and trend analysis reports.' },
+      { title: 'Community Discussions', url: 'community-threads.net', desc: 'Popular discussions, tutorials, and how-to posts.' },
+      { title: 'Learning Resources', url: 'learn-central.io', desc: 'Structured content tracks for practical learning.' }
     ];
 
     function render(query) {
-      const wrapper = document.getElementById('results');
-      wrapper.innerHTML = '';
+      const root = document.getElementById('results');
+      root.innerHTML = '';
       const q = query || 'technology';
-      resultPool.forEach((item, i) => {
-        const article = document.createElement('article');
-        article.className = 'result-item';
-        article.innerHTML = `
-          <a href="#" class="title-link">${q} ${item.title}</a>
+      resultPool.forEach((item, index) => {
+        const node = document.createElement('article');
+        node.className = 'result-item';
+        node.innerHTML = `
+          <a href="#" class="title-link">${item.title}</a>
           <div class="url-line">${item.url}</div>
           <p>${item.desc}</p>
+          <button class="open-btn" data-query="${q} ${index + 1}">Open</button>
         `;
-        article.querySelector('.title-link').addEventListener('click', (e) => {
-          e.preventDefault();
-          render(`${q} ${i + 1}`);
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        wrapper.appendChild(article);
+        root.appendChild(node);
+      });
+
+      root.querySelectorAll('.open-btn').forEach((btn) => {
+        btn.addEventListener('click', () => render(btn.dataset.query));
       });
     }
 
@@ -49,7 +60,13 @@
       render(document.getElementById('q').value.trim());
     });
 
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      render('account center');
+    });
+
     render('web');
   </script>
+  <script src="{{ url_for('static', filename='tracker.js') }}"></script>
 </body>
 </html>

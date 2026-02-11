@@ -1,0 +1,10 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, "Segoe UI", sans-serif; background: radial-gradient(circle at 20% 20%, #0f172a 0%, #020617 75%); color: #e2e8f0; }
+.analytics-wrap { width: min(1100px, 95%); margin: 1.5rem auto; }
+h1 { color: #67e8f9; margin-bottom: 1rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 1rem; margin-bottom: 1rem; }
+.cards article, .panel { background: rgba(11,18,32,.9); border: 1px solid #1e293b; border-radius: 12px; padding: 1rem; }
+.cards h3, .panel h2 { color:#93c5fd; margin-bottom:.5rem; }
+.cards p { color:#22d3ee; font-size:1.2rem; }
+.session-list .row { display:flex; justify-content:space-between; border-bottom:1px solid #233048; padding:.45rem 0; }
+canvas { width: 100%; border: 1px solid #334155; border-radius: 8px; background:#0b1220; }
