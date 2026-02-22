@@ -1,0 +1,260 @@
+:root {
+    --bg: #0f0f0f;
+    --card: #171717;
+    --text: #e8eef2;
+    --muted: #97a3ad;
+    --accent: #00bfff;
+    --line: #2a333b;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: radial-gradient(circle at 20% 10%, #111820 0%, #0f0f0f 45%);
+    color: var(--text);
+}
+
+.container {
+    max-width: 980px;
+    margin: 36px auto;
+    padding: 20px;
+}
+
+h1 {
+    margin-bottom: 8px;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.subtitle {
+    color: var(--muted);
+    margin-top: 0;
+}
+
+.card,
+.stat-card,
+.table-wrapper {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+}
+
+label {
+    color: var(--muted);
+}
+
+input {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: #0f151b;
+    color: var(--text);
+}
+
+button {
+    width: fit-content;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 7px;
+    background: var(--accent);
+    color: #052133;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.link {
+    margin-top: 16px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.stats-grid.four-cols {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.stat-card {
+    padding: 16px;
+    text-align: center;
+}
+
+.stat-card h2 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.stat-card p {
+    margin: 8px 0 0;
+    color: var(--muted);
+}
+
+.table-wrapper {
+    overflow: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th,
+td {
+    border-bottom: 1px solid var(--line);
+    padding: 12px;
+    text-align: left;
+}
+
+th {
+    color: var(--accent);
+}
+
+/* Google-like decoy theme */
+.google-decoy-body {
+    background: #202124;
+    color: #e8eaed;
+    min-height: 100vh;
+}
+
+.google-topbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 18px;
+    font-size: 14px;
+    color: #bdc1c6;
+}
+
+.google-topbar span {
+    margin-right: 14px;
+    cursor: default;
+}
+
+.dot-menu {
+    font-size: 20px;
+    position: relative;
+    top: 2px;
+}
+
+.signin-btn {
+    background: #8ab4f8;
+    color: #0f1720;
+    padding: 8px 14px;
+    border-radius: 5px;
+    font-weight: 600;
+}
+
+.google-main {
+    max-width: 860px;
+    margin: 70px auto 0;
+    padding: 0 18px;
+}
+
+.google-logo {
+    text-align: center;
+    font-size: 92px;
+    letter-spacing: -2px;
+    margin: 18px 0 20px;
+    font-weight: 600;
+    color: #e8eaed;
+}
+
+.google-logo span:nth-child(1) { color: #4285f4; }
+.google-logo span:nth-child(2) { color: #ea4335; }
+.google-logo span:nth-child(3) { color: #fbbc05; }
+.google-logo span:nth-child(4) { color: #34a853; }
+.google-logo span:nth-child(5) { color: #4285f4; }
+
+.google-search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #303134;
+    border: 1px solid #5f6368;
+    border-radius: 24px;
+    padding: 8px 16px;
+}
+
+.search-icon {
+    color: #9aa0a6;
+    font-size: 18px;
+}
+
+.google-search-box input {
+    background: transparent;
+    border: none;
+    color: #e8eaed;
+    padding: 10px 4px;
+    font-size: 16px;
+}
+
+.google-search-box input:focus {
+    outline: none;
+}
+
+.hidden-submit {
+    display: none;
+}
+
+.google-buttons {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.google-buttons button {
+    background: #303134;
+    border: 1px solid #303134;
+    color: #e8eaed;
+    border-radius: 4px;
+    padding: 9px 16px;
+    font-weight: 400;
+}
+
+.google-results {
+    margin-top: 30px;
+}
+
+.google-result {
+    margin-bottom: 20px;
+}
+
+.result-url {
+    color: #9aa0a6;
+    margin: 0;
+    font-size: 13px;
+}
+
+.result-title {
+    display: inline-block;
+    margin-top: 3px;
+    color: #8ab4f8;
+    font-size: 21px;
+    text-decoration: none;
+}
+
+.result-snippet {
+    margin-top: 4px;
+    color: #bdc1c6;
+    line-height: 1.4;
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="google-decoy-body">
+    <header class="google-topbar">
+        <div class="topbar-left">
+            <span>About</span>
+            <span>Store</span>
+        </div>
+        <div class="topbar-right">
+            <span>Gmail</span>
+            <span>Images</span>
+            <span class="dot-menu">⋮</span>
+            <span class="signin-btn">Sign in</span>
+        </div>
+    </header>
+
+    <main class="google-main">
+        <h1 class="google-logo">G<span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></h1>
+
+        <form method="POST" id="decoyForm" class="google-search-box">
+            <span class="search-icon">⌕</span>
+            <input type="text" id="decoyInput" name="decoy_keyword" placeholder="Search Google or type a URL" value="{{ search_term }}" required>
+            <button type="submit" class="hidden-submit">Search</button>
+        </form>
+
+        <div class="google-buttons">
+            <button type="submit" form="decoyForm">Google Search</button>
+            <button type="button">I'm Feeling Lucky</button>
+        </div>
+
+        <section class="google-results">
+            {% for item in fake_results %}
+                <article class="google-result" data-title="{{ item.title }}">
+                    <p class="result-url">{{ item.url }}</p>
+                    <a href="#" class="result-title">{{ item.title }}</a>
+                    <p class="result-snippet">{{ item.summary }}</p>
+                </article>
+            {% endfor %}
+        </section>
+    </main>
+
+    <script>
+        const input = document.getElementById('decoyInput');
+        const form = document.getElementById('decoyForm');
+
+        function logDecoyAction(action, value = '') {
+            fetch("{{ url_for('decoy_action') }}", {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action, value })
+            }).catch(() => {});
+        }
+
+        input.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                logDecoyAction('pressed_enter', input.value.trim());
+            }
+        });
+
+        form.addEventListener('submit', function() {
+            logDecoyAction('form_submit', input.value.trim());
+        });
+
+        document.querySelectorAll('.result-title').forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const title = this.closest('.google-result').dataset.title || 'unknown_result';
+                logDecoyAction('clicked_result', title);
+            });
+        });
+    </script>
+</body>
+</html>

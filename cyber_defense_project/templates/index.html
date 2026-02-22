@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Cyber Defense Framework</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Intelligent Cyber Defense Framework</h1>
+        <p class="subtitle">Behavior-Based Intrusion Detection and Automated Attack Mitigation</p>
+
+        <form action="{{ url_for('analyze_keyword') }}" method="POST" class="card">
+            <label for="keyword">Enter search keyword</label>
+            <input type="text" id="keyword" name="keyword" placeholder="Try any keyword" required>
+            <button type="submit">Submit Request</button>
+        </form>
+
+        <p class="link"><a href="{{ url_for('dashboard') }}">Open Admin Dashboard</a></p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Security Monitoring Dashboard</h1>
+
+        <div class="stats-grid four-cols">
+            <div class="stat-card">
+                <h2>{{ total_requests }}</h2>
+                <p>Total Requests</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_normal }}</h2>
+                <p>Total Normal</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_abnormal }}</h2>
+                <p>Total Abnormal</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_decoy_actions }}</h2>
+                <p>Decoy Actions</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Log Entries</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>{{ log }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="link"><a href="{{ url_for('index') }}">Back to Detection Interface</a></p>
+    </div>
+</body>
+</html>
