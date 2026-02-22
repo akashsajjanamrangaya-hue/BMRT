@@ -5,50 +5,49 @@ import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent
 LOG_FILE = BASE_DIR / "logs.txt"
-OUTPUT_CHART = BASE_DIR / "monthly_abnormal_attempts.png"
+OUTPUT = BASE_DIR / "monthly_abnormal_interaction_attempts.png"
 
 
-def parse_primary_log_lines(lines: list[str]) -> pd.DataFrame:
-    """Parse primary behavior-analysis entries from logs file."""
-    records = []
-    for line in lines:
-        if "|" not in line or "Decoy Search" in line:
+def load_log_dataframe() -> pd.DataFrame:
+    if not LOG_FILE.exists():
+        return pd.DataFrame()
+
+    rows = []
+    for line in LOG_FILE.read_text(encoding="utf-8").splitlines():
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) != 8:
             continue
 
-        parts = [part.strip() for part in line.split("|")]
-        if len(parts) != 5:
-            continue
-
-        timestamp = parts[0].strip("[]")
-        records.append(
+        rows.append(
             {
-                "timestamp": timestamp,
-                "keyword": parts[1],
-                "risk_score": parts[2],
-                "classification": parts[3],
-                "action": parts[4],
+                "timestamp": parts[0].strip("[]"),
+                "session_id": parts[1],
+                "input": parts[2],
+                "length": parts[3],
+                "special_chars": parts[4],
+                "time_delta": parts[5],
+                "interaction_count": parts[6],
+                "context": parts[7],
             }
         )
 
-    if not records:
-        return pd.DataFrame(columns=["timestamp", "keyword", "risk_score", "classification", "action"])
+    if not rows:
+        return pd.DataFrame()
 
-    df = pd.DataFrame(records)
+    df = pd.DataFrame(rows)
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     return df.dropna(subset=["timestamp"])
 
 
-def generate_monthly_abnormal_chart() -> None:
-    if not LOG_FILE.exists():
-        print("logs.txt not found. Run app.py first to generate logs.")
+def generate_chart() -> None:
+    df = load_log_dataframe()
+    if df.empty:
+        print("No valid log entries found.")
         return
 
-    lines = LOG_FILE.read_text(encoding="utf-8").splitlines()
-    df = parse_primary_log_lines(lines)
-
-    abnormal_df = df[df["classification"] == "Abnormal"].copy()
+    abnormal_df = df[df["context"].str.contains("ABNORMAL", case=False, na=False)].copy()
     if abnormal_df.empty:
-        print("No abnormal entries found in logs.")
+        print("No abnormal behavior entries found in logs.")
         return
 
     abnormal_df["month"] = abnormal_df["timestamp"].dt.to_period("M").astype(str)
@@ -56,15 +55,15 @@ def generate_monthly_abnormal_chart() -> None:
 
     plt.figure(figsize=(10, 5))
     plt.bar(grouped["month"], grouped["count"], color="#00bfff")
-    plt.title("Monthly Abnormal Access Attempts")
+    plt.title("Monthly Abnormal Interaction Attempts")
     plt.xlabel("Month")
-    plt.ylabel("Number of Attempts")
+    plt.ylabel("Count")
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(OUTPUT_CHART)
+    plt.savefig(OUTPUT)
 
-    print(f"Chart generated successfully: {OUTPUT_CHART}")
+    print(f"Saved chart: {OUTPUT}")
 
 
 if __name__ == "__main__":
-    generate_monthly_abnormal_chart()
+    generate_chart()

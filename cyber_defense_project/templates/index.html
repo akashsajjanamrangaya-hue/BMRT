@@ -11,13 +11,13 @@
         <h1>Intelligent Cyber Defense Framework</h1>
         <p class="subtitle">Behavior-Based Intrusion Detection and Automated Attack Mitigation</p>
 
-        <form action="{{ url_for('analyze_keyword') }}" method="POST" class="card">
-            <label for="keyword">Enter search keyword</label>
-            <input type="text" id="keyword" name="keyword" placeholder="Try any keyword" required>
-            <button type="submit">Submit Request</button>
+        <form action="{{ url_for('analyze') }}" method="POST" class="card">
+            <label for="keyword">Input query for risk analysis</label>
+            <input type="text" id="keyword" name="keyword" placeholder="Enter input" required>
+            <button type="submit">Submit</button>
         </form>
 
-        <p class="link"><a href="{{ url_for('dashboard') }}">Open Admin Dashboard</a></p>
+        <p class="link"><a href="{{ url_for('dashboard') }}">Open Monitoring Dashboard</a></p>
     </div>
 </body>
 </html>

@@ -3,117 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Google</title>
+    <title>SecureSearch</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="google-decoy-body">
-    <header class="google-topbar">
-        <div class="topbar-left">
-            <span>About</span>
-            <span>Store</span>
-        </div>
-        <div class="topbar-right">
-            <span>Gmail</span>
-            <span>Images</span>
-            <span class="apps-dot" title="Google apps">⋮</span>
-            <span class="signin-btn">Sign in</span>
-        </div>
-    </header>
+<body class="decoy-page">
+    <main class="decoy-main">
+        <h1 class="decoy-title">SecureSearch</h1>
 
-    <main class="google-main">
-        <h1 class="google-logo">
-            <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
-        </h1>
-
-        <form method="POST" id="decoyForm" class="google-search-box">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="decoyInput" name="decoy_keyword" autocomplete="off" placeholder="Search Google or type a URL" value="{{ search_term }}" required>
-            <span class="voice-icon">🎤</span>
-            <button type="submit" class="hidden-submit">Search</button>
+        <form method="POST" class="decoy-search-form" id="decoyForm">
+            <input
+                type="text"
+                id="decoyInput"
+                name="decoy_input"
+                autocomplete="off"
+                placeholder="Search indexed knowledge"
+                value="{{ query }}"
+                required
+            >
+            <button type="submit">Search</button>
         </form>
 
-        <div class="google-buttons">
-            <button type="submit" id="googleSearchBtn" form="decoyForm">Google Search</button>
-            <button type="button" id="luckyBtn">I'm Feeling Lucky</button>
-        </div>
-
-        <section class="google-results">
-            {% for item in fake_results %}
-                <article class="google-result" data-title="{{ item.title }}">
-                    <div class="result-head">{{ item.url }}</div>
-                    <a href="#" class="result-title">{{ item.title }}</a>
-                    <p class="result-snippet">{{ item.summary }}</p>
+        <section class="decoy-results" id="resultSection">
+            {% for item in results %}
+                <article class="decoy-result-card">
+                    <p class="decoy-url">{{ item.url }}</p>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.summary }}</p>
                 </article>
             {% endfor %}
         </section>
+
+        <nav class="decoy-pagination">
+            {% if has_prev %}
+                <a href="{{ url_for('decoy', page=page-1) }}">Previous</a>
+            {% endif %}
+            <span>Page {{ page }}</span>
+            {% if has_next %}
+                <a href="{{ url_for('decoy', page=page+1) }}">Next</a>
+            {% endif %}
+        </nav>
     </main>
 
-    <footer class="google-footer">
-        <div>India</div>
-        <div class="footer-links">
-            <span>Advertising</span>
-            <span>Business</span>
-            <span>How Search works</span>
-            <span>Privacy</span>
-            <span>Terms</span>
-            <span>Settings</span>
-        </div>
+    <footer class="decoy-footer">
+        Academic deception environment for behavior analytics research.
     </footer>
 
     <script>
         const input = document.getElementById('decoyInput');
-        const form = document.getElementById('decoyForm');
-        const luckyBtn = document.getElementById('luckyBtn');
-        const searchBtn = document.getElementById('googleSearchBtn');
+        const resultSection = document.getElementById('resultSection');
 
-        function logDecoyAction(action, value = '') {
-            fetch("{{ url_for('decoy_action') }}", {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ action, value })
-            }).catch(() => {});
-        }
-
-        window.addEventListener('load', function() {
-            logDecoyAction('page_loaded', window.location.pathname);
-        });
-
-        input.addEventListener('focus', function() {
-            logDecoyAction('input_focus', 'decoyInput');
-        });
-
-        input.addEventListener('blur', function() {
-            logDecoyAction('input_blur', 'decoyInput');
-        });
-
-        input.addEventListener('input', function() {
-            logDecoyAction('typed_character', `len=${input.value.length}`);
-        });
-
-        input.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                logDecoyAction('pressed_enter', input.value.trim());
-            }
-        });
-
-        form.addEventListener('submit', function() {
-            logDecoyAction('form_submit', input.value.trim());
-        });
-
-        searchBtn.addEventListener('click', function() {
-            logDecoyAction('clicked_google_search', input.value.trim());
-        });
-
-        luckyBtn.addEventListener('click', function() {
-            logDecoyAction('clicked_feeling_lucky', input.value.trim());
-        });
-
-        document.querySelectorAll('.result-title').forEach(link => {
-            link.addEventListener('click', function(event) {
-                event.preventDefault();
-                const title = this.closest('.google-result').dataset.title || 'unknown_result';
-                logDecoyAction('clicked_result', title);
-            });
+        // Simple local response feel (visual-only) to mimic instant search interaction.
+        input.addEventListener('input', function () {
+            resultSection.style.opacity = '0.72';
+            clearTimeout(window.resultGlowTimer);
+            window.resultGlowTimer = setTimeout(() => {
+                resultSection.style.opacity = '1';
+            }, 90);
         });
     </script>
 </body>

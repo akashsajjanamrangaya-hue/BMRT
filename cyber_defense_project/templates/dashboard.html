@@ -3,54 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Dashboard</title>
+    <title>Research Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Security Monitoring Dashboard</h1>
+        <h1>Behavior Monitoring Dashboard</h1>
 
-        <div class="stats-grid five-cols">
+        <div class="stats-grid three-cols">
             <div class="stat-card">
                 <h2>{{ total_requests }}</h2>
                 <p>Total Requests</p>
             </div>
             <div class="stat-card">
-                <h2>{{ total_normal }}</h2>
-                <p>Total Normal</p>
+                <h2>{{ abnormal_percentage }}%</h2>
+                <p>Abnormal Percentage</p>
             </div>
             <div class="stat-card">
-                <h2>{{ total_abnormal }}</h2>
-                <p>Total Abnormal</p>
+                <h2>{{ session_behavior|length }}</h2>
+                <p>Active Sessions</p>
             </div>
-            <div class="stat-card">
-                <h2>{{ total_decoy_actions }}</h2>
-                <p>Decoy Actions</p>
-            </div>
-            <div class="stat-card">
-                <h2>{{ total_abnormal_steps }}</h2>
-                <p>Abnormal Steps</p>
-            </div>
+        </div>
+
+        <div class="session-box">
+            <h3>Session-based Attack Behavior</h3>
+            <ul>
+                {% for sid, count in session_behavior %}
+                    <li><span>{{ sid }}</span><strong>{{ count }} interactions</strong></li>
+                {% endfor %}
+            </ul>
         </div>
 
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>Log Entries</th>
+                        <th>Timestamp</th>
+                        <th>SessionID</th>
+                        <th>Input</th>
+                        <th>Length</th>
+                        <th>SpecialChars</th>
+                        <th>TimeDelta</th>
+                        <th>InteractionCount</th>
+                        <th>Context</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for log in logs %}
+                    {% for row in records %}
                         <tr>
-                            <td>{{ log }}</td>
+                            <td>{{ row.timestamp }}</td>
+                            <td>{{ row.session_id }}</td>
+                            <td>{{ row.input }}</td>
+                            <td>{{ row.length }}</td>
+                            <td>{{ row.special_chars }}</td>
+                            <td>{{ row.time_delta }}</td>
+                            <td>{{ row.interaction_count }}</td>
+                            <td>{{ row.context }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
 
-        <p class="link"><a href="{{ url_for('index') }}">Back to Detection Interface</a></p>
+        <p class="link"><a href="{{ url_for('index') }}">Back to Home</a></p>
     </div>
 </body>
 </html>
