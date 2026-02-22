@@ -77,6 +77,15 @@ def append_decoy_action_log(action: str, value: str = "") -> None:
         log_file.write(entry)
 
 
+def append_abnormal_step_log(step: str, value: str = "") -> None:
+    """Store each minute step of abnormal behavior pipeline for analysis."""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    session_id = ensure_session_id()
+    entry = f"[{timestamp}] | Abnormal Step | {step} | {value} | Session={session_id}\n"
+    with LOG_FILE.open("a", encoding="utf-8") as log_file:
+        log_file.write(entry)
+
+
 def read_logs() -> list[str]:
     """Read all logs for dashboard presentation."""
     if not LOG_FILE.exists():
@@ -105,7 +114,7 @@ def analyze_keyword():
     session["request_count"] = session.get("request_count", 0) + 1
     request_frequency = session["request_count"]
 
-    risk_score, _ = calculate_risk_score(keyword, request_frequency)
+    risk_score, features = calculate_risk_score(keyword, request_frequency)
     classification = classify_request(risk_score)
 
     if classification == "Normal":
@@ -113,10 +122,20 @@ def analyze_keyword():
         append_log(keyword, risk_score, classification, action)
         return redirect(f"https://www.google.com/search?q={keyword}")
 
+    # Each step of abnormal path is logged for cyber-forensic review.
+    append_abnormal_step_log("received_keyword", keyword)
+    append_abnormal_step_log(
+        "calculated_features",
+        f"len={features['keyword_length']},special={features['special_characters']},freq={features['request_frequency']},flag={features['suspicious_pattern_flag']}",
+    )
+    append_abnormal_step_log("calculated_risk_score", str(risk_score))
+    append_abnormal_step_log("classified", classification)
+
     # Abnormal traffic is silently rerouted to deception environment.
     session["in_decoy"] = True
     action = "Redirect: Decoy Website"
     append_log(keyword, risk_score, classification, action)
+    append_abnormal_step_log("redirected_to_decoy", url_for("decoy"))
     append_decoy_action_log("entered_decoy", keyword)
     return redirect(url_for("decoy"))
 
@@ -128,6 +147,9 @@ def decoy():
     fake_results = []
     search_term = ""
 
+    if session.get("in_decoy") and request.method == "GET":
+        append_decoy_action_log("decoy_page_view", "home")
+
     if request.method == "POST":
         search_term = request.form.get("decoy_keyword", "").strip()
         if search_term:
@@ -135,19 +157,19 @@ def decoy():
             append_decoy_action_log("submitted_search", search_term)
             fake_results = [
                 {
-                    "title": f"{search_term.title()} - Official Documentation",
-                    "url": f"https://{search_term.lower().replace(' ', '')}.org/docs",
-                    "summary": "Explore technical guides, implementation references, and security-focused architecture notes.",
+                    "title": f"{search_term.title()} - Google Search",
+                    "url": f"https://www.{search_term.lower().replace(' ', '')}.com",
+                    "summary": "Trusted pages, official resources, and web references related to your search query.",
                 },
                 {
-                    "title": f"{search_term.title()} Latest Research",
-                    "url": f"https://research.{search_term.lower().replace(' ', '')}.edu",
-                    "summary": "Peer-reviewed publications and case studies related to cyber defense and behavior analytics.",
+                    "title": f"{search_term.title()} - Wikipedia",
+                    "url": f"https://en.wikipedia.org/wiki/{search_term.lower().replace(' ', '_')}",
+                    "summary": "Free encyclopedia article with background information, references, and related links.",
                 },
                 {
-                    "title": f"Best Practices for {search_term.title()}",
-                    "url": f"https://knowledgebase.example/{search_term.lower().replace(' ', '-')}",
-                    "summary": "A concise list of field-tested security controls and deployment recommendations.",
+                    "title": f"Latest news on {search_term.title()}",
+                    "url": f"https://news.google.com/search?q={search_term.lower().replace(' ', '%20')}",
+                    "summary": "Recent news highlights, timeline events, and important updates from multiple publishers.",
                 },
             ]
 
@@ -160,7 +182,7 @@ def decoy_action():
     ensure_session_id()
 
     payload = request.get_json(silent=True) or {}
-    action = str(payload.get("action", "unknown_action"))[:60]
+    action = str(payload.get("action", "unknown_action"))[:80]
     value = str(payload.get("value", ""))[:200]
     append_decoy_action_log(action, value)
     return jsonify({"status": "ok"})
@@ -174,11 +196,14 @@ def dashboard():
     total_normal = 0
     total_abnormal = 0
     total_decoy_actions = 0
+    total_abnormal_steps = 0
 
     for entry in logs:
         if "| Decoy Action |" in entry:
             total_decoy_actions += 1
-        if "|" in entry and "Decoy Search" not in entry and "Decoy Action" not in entry:
+        if "| Abnormal Step |" in entry:
+            total_abnormal_steps += 1
+        if "|" in entry and "Decoy Search" not in entry and "Decoy Action" not in entry and "Abnormal Step" not in entry:
             total_requests += 1
             if "| Normal |" in entry:
                 total_normal += 1
@@ -192,6 +217,7 @@ def dashboard():
         total_normal=total_normal,
         total_abnormal=total_abnormal,
         total_decoy_actions=total_decoy_actions,
+        total_abnormal_steps=total_abnormal_steps,
     )
 
 

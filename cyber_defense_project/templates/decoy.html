@@ -15,29 +15,32 @@
         <div class="topbar-right">
             <span>Gmail</span>
             <span>Images</span>
-            <span class="dot-menu">⋮</span>
+            <span class="apps-dot" title="Google apps">⋮</span>
             <span class="signin-btn">Sign in</span>
         </div>
     </header>
 
     <main class="google-main">
-        <h1 class="google-logo">G<span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></h1>
+        <h1 class="google-logo">
+            <span class="g-blue">G</span><span class="g-red">o</span><span class="g-yellow">o</span><span class="g-blue">g</span><span class="g-green">l</span><span class="g-red">e</span>
+        </h1>
 
         <form method="POST" id="decoyForm" class="google-search-box">
-            <span class="search-icon">⌕</span>
-            <input type="text" id="decoyInput" name="decoy_keyword" placeholder="Search Google or type a URL" value="{{ search_term }}" required>
+            <span class="search-icon">🔍</span>
+            <input type="text" id="decoyInput" name="decoy_keyword" autocomplete="off" placeholder="Search Google or type a URL" value="{{ search_term }}" required>
+            <span class="voice-icon">🎤</span>
             <button type="submit" class="hidden-submit">Search</button>
         </form>
 
         <div class="google-buttons">
-            <button type="submit" form="decoyForm">Google Search</button>
-            <button type="button">I'm Feeling Lucky</button>
+            <button type="submit" id="googleSearchBtn" form="decoyForm">Google Search</button>
+            <button type="button" id="luckyBtn">I'm Feeling Lucky</button>
         </div>
 
         <section class="google-results">
             {% for item in fake_results %}
                 <article class="google-result" data-title="{{ item.title }}">
-                    <p class="result-url">{{ item.url }}</p>
+                    <div class="result-head">{{ item.url }}</div>
                     <a href="#" class="result-title">{{ item.title }}</a>
                     <p class="result-snippet">{{ item.summary }}</p>
                 </article>
@@ -45,9 +48,23 @@
         </section>
     </main>
 
+    <footer class="google-footer">
+        <div>India</div>
+        <div class="footer-links">
+            <span>Advertising</span>
+            <span>Business</span>
+            <span>How Search works</span>
+            <span>Privacy</span>
+            <span>Terms</span>
+            <span>Settings</span>
+        </div>
+    </footer>
+
     <script>
         const input = document.getElementById('decoyInput');
         const form = document.getElementById('decoyForm');
+        const luckyBtn = document.getElementById('luckyBtn');
+        const searchBtn = document.getElementById('googleSearchBtn');
 
         function logDecoyAction(action, value = '') {
             fetch("{{ url_for('decoy_action') }}", {
@@ -57,6 +74,22 @@
             }).catch(() => {});
         }
 
+        window.addEventListener('load', function() {
+            logDecoyAction('page_loaded', window.location.pathname);
+        });
+
+        input.addEventListener('focus', function() {
+            logDecoyAction('input_focus', 'decoyInput');
+        });
+
+        input.addEventListener('blur', function() {
+            logDecoyAction('input_blur', 'decoyInput');
+        });
+
+        input.addEventListener('input', function() {
+            logDecoyAction('typed_character', `len=${input.value.length}`);
+        });
+
         input.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 logDecoyAction('pressed_enter', input.value.trim());
@@ -65,6 +98,14 @@
 
         form.addEventListener('submit', function() {
             logDecoyAction('form_submit', input.value.trim());
+        });
+
+        searchBtn.addEventListener('click', function() {
+            logDecoyAction('clicked_google_search', input.value.trim());
+        });
+
+        luckyBtn.addEventListener('click', function() {
+            logDecoyAction('clicked_feeling_lucky', input.value.trim());
         });
 
         document.querySelectorAll('.result-title').forEach(link => {

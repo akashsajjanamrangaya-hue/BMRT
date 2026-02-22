@@ -10,7 +10,7 @@
     <div class="container">
         <h1>Security Monitoring Dashboard</h1>
 
-        <div class="stats-grid four-cols">
+        <div class="stats-grid five-cols">
             <div class="stat-card">
                 <h2>{{ total_requests }}</h2>
                 <p>Total Requests</p>
@@ -26,6 +26,10 @@
             <div class="stat-card">
                 <h2>{{ total_decoy_actions }}</h2>
                 <p>Decoy Actions</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_abnormal_steps }}</h2>
+                <p>Abnormal Steps</p>
             </div>
         </div>
 
