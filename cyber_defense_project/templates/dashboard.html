@@ -9,7 +9,9 @@
 <body>
     <div class="container">
         <h1>Security Monitoring Dashboard</h1>
+        <p class="subtitle">Behavior-Based Intrusion Detection Summary</p>
 
+        <!-- Statistics -->
         <div class="stats-grid">
             <div class="stat-card">
                 <h2>{{ total_requests }}</h2>
@@ -25,6 +27,7 @@
             </div>
         </div>
 
+        <!-- Logs Table -->
         <div class="table-wrapper">
             <table>
                 <thead>
@@ -42,7 +45,9 @@
             </table>
         </div>
 
-        <p class="link"><a href="{{ url_for('index') }}">Back to Detection Interface</a></p>
+        <p class="link">
+            <a href="{{ url_for('index') }}">Back to Detection Interface</a>
+        </p>
     </div>
 </body>
 </html>

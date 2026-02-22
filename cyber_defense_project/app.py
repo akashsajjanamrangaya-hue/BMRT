@@ -4,6 +4,9 @@ from uuid import uuid4
 
 from flask import Flask, redirect, render_template, request, session, url_for
 
+# -----------------------------
+# Configuration
+# -----------------------------
 BASE_DIR = Path(__file__).resolve().parent
 LOG_FILE = BASE_DIR / "logs.txt"
 
@@ -12,47 +15,46 @@ app.secret_key = "cyber-defense-final-year-project-key"
 
 
 # -----------------------------
-# Utility and behavior functions
+# Utility & Behavior Functions
 # -----------------------------
 def ensure_session_id() -> str:
-    """Create and store a unique session id for each visitor."""
+    """Create and store a unique session ID for each visitor."""
     if "session_id" not in session:
         session["session_id"] = str(uuid4())[:8]
     return session["session_id"]
 
 
-def calculate_risk_score(keyword: str, request_frequency: int) -> tuple[float, dict]:
+def calculate_risk_score(keyword: str, request_frequency: int) -> float:
     """
-    Calculate risk score using the weighted formula:
+    Risk Score formula:
     RS = (0.4 × special_characters)
          + (0.3 × request_frequency)
          + (0.3 × suspicious_pattern_flag)
     """
-    special_characters = sum(1 for char in keyword if not char.isalnum() and not char.isspace())
-    suspicious_pattern_flag = 1 if ("//" in keyword or "\\\\" in keyword or "@@" in keyword or ".." in keyword) else 0
+    special_characters = sum(1 for c in keyword if not c.isalnum() and not c.isspace())
+    suspicious_pattern_flag = 1 if ("//" in keyword or ".." in keyword or "@@" in keyword or "\\" in keyword) else 0
 
     risk_score = (
         (0.4 * special_characters)
         + (0.3 * request_frequency)
         + (0.3 * suspicious_pattern_flag)
     )
-
-    features = {
-        "keyword_length": len(keyword),
-        "special_characters": special_characters,
-        "request_frequency": request_frequency,
-        "suspicious_pattern_flag": suspicious_pattern_flag,
-    }
-    return round(risk_score, 2), features
+    return round(risk_score, 2)
 
 
 def classify_request(risk_score: float) -> str:
-    """Classify request using project threshold."""
+    """Classify request based on threshold."""
     return "Abnormal" if risk_score > 3 else "Normal"
 
 
+# -----------------------------
+# Logging Functions
+# -----------------------------
 def append_log(keyword: str, risk_score: float, classification: str, action: str) -> None:
-    """Append primary behavior analysis log entry to logs.txt."""
+    """
+    Primary behavior analysis log format:
+    [Timestamp] | Keyword | Risk Score | Classification | Action
+    """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     entry = f"[{timestamp}] | {keyword} | {risk_score} | {classification} | {action}\n"
     with LOG_FILE.open("a", encoding="utf-8") as log_file:
@@ -60,7 +62,10 @@ def append_log(keyword: str, risk_score: float, classification: str, action: str
 
 
 def append_decoy_log(keyword: str) -> None:
-    """Append decoy interaction log with session details."""
+    """
+    Decoy interaction log format:
+    [Timestamp] | Decoy Search | Keyword | Session=<ID>
+    """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     session_id = ensure_session_id()
     entry = f"[{timestamp}] | Decoy Search | {keyword} | Session={session_id}\n"
@@ -69,7 +74,7 @@ def append_decoy_log(keyword: str) -> None:
 
 
 def read_logs() -> list[str]:
-    """Read all logs for dashboard presentation."""
+    """Read logs for dashboard display."""
     if not LOG_FILE.exists():
         return []
     return LOG_FILE.read_text(encoding="utf-8").splitlines()[::-1]
@@ -92,19 +97,19 @@ def analyze_keyword():
     if not keyword:
         return redirect(url_for("index"))
 
-    # Simple request-frequency tracking in session to model behavioral pressure.
+    # Track request frequency per session
     session["request_count"] = session.get("request_count", 0) + 1
     request_frequency = session["request_count"]
 
-    risk_score, _ = calculate_risk_score(keyword, request_frequency)
+    risk_score = calculate_risk_score(keyword, request_frequency)
     classification = classify_request(risk_score)
 
     if classification == "Normal":
         action = "Redirect: Real Website"
         append_log(keyword, risk_score, classification, action)
-        return redirect(f"https://www.google.com/search?q={keyword}")
+        return redirect(f"https://example.org/search?q={keyword}")
 
-    # Abnormal traffic is silently rerouted to deception environment.
+    # Abnormal traffic → deception interface
     session["in_decoy"] = True
     action = "Redirect: Decoy Website"
     append_log(keyword, risk_score, classification, action)
@@ -126,17 +131,17 @@ def decoy():
                 {
                     "title": f"{search_term.title()} Security Overview",
                     "url": f"www.{search_term.lower().replace(' ', '')}-insights.net",
-                    "summary": "Comprehensive report discussing latest behavior-based intrusion scenarios and mitigation guidance.",
+                    "summary": "Academic overview discussing behavior-based intrusion patterns and mitigation strategies.",
                 },
                 {
                     "title": f"{search_term.title()} Technical Documentation",
                     "url": f"docs.{search_term.lower().replace(' ', '')}.org",
-                    "summary": "Reference documents, white papers, and implementation templates for secure architecture workflows.",
+                    "summary": "Research-oriented documentation, reference architectures, and defensive workflows.",
                 },
                 {
-                    "title": f"Top 10 {search_term.title()} Best Practices",
-                    "url": f"cyber-journal.example/{search_term.lower().replace(' ', '-')}",
-                    "summary": "Academic style article listing proven defensive controls used in educational and enterprise networks.",
+                    "title": f"Top {search_term.title()} Defensive Practices",
+                    "url": f"research.example/{search_term.lower().replace(' ', '-')}",
+                    "summary": "Scholarly article presenting best practices for cyber defense and anomaly detection.",
                 },
             ]
 

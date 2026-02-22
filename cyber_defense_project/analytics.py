@@ -3,50 +3,68 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent
+
+# Log file path
 LOG_FILE = BASE_DIR / "logs.txt"
+
+# Output chart path
 OUTPUT_CHART = BASE_DIR / "monthly_abnormal_attempts.png"
 
 
-def parse_primary_log_lines(lines: list[str]) -> pd.DataFrame:
-    """Parse primary behavior-analysis entries from logs file."""
+def parse_log_file() -> pd.DataFrame:
+    """
+    Parse behavior-analysis entries from logs.txt.
+
+    Expected log format:
+    [Timestamp] | Keyword | Risk Score | Classification | Action
+
+    Decoy-only interaction logs are ignored.
+    """
+    if not LOG_FILE.exists():
+        return pd.DataFrame(columns=["timestamp", "classification"])
+
     records = []
-    for line in lines:
+
+    for line in LOG_FILE.read_text(encoding="utf-8").splitlines():
+        # Ignore invalid or decoy-only logs
         if "|" not in line or "Decoy Search" in line:
             continue
 
         parts = [part.strip() for part in line.split("|")]
+
         if len(parts) != 5:
             continue
 
         timestamp = parts[0].strip("[]")
+        classification = parts[3]
+
         records.append(
             {
                 "timestamp": timestamp,
-                "keyword": parts[1],
-                "risk_score": parts[2],
-                "classification": parts[3],
-                "action": parts[4],
+                "classification": classification,
             }
         )
 
-    if not records:
-        return pd.DataFrame(columns=["timestamp", "keyword", "risk_score", "classification", "action"])
-
     df = pd.DataFrame(records)
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+
     return df.dropna(subset=["timestamp"])
 
 
 def generate_monthly_abnormal_chart() -> None:
-    if not LOG_FILE.exists():
-        print("logs.txt not found. Run app.py first to generate logs.")
+    """
+    Generate a bar chart showing monthly abnormal access attempts.
+    """
+    df = parse_log_file()
+
+    if df.empty:
+        print("No valid log entries found.")
         return
 
-    lines = LOG_FILE.read_text(encoding="utf-8").splitlines()
-    df = parse_primary_log_lines(lines)
+    abnormal_df = df[df["classification"] == "Abnormal"]
 
-    abnormal_df = df[df["classification"] == "Abnormal"].copy()
     if abnormal_df.empty:
         print("No abnormal entries found in logs.")
         return
@@ -62,6 +80,7 @@ def generate_monthly_abnormal_chart() -> None:
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.savefig(OUTPUT_CHART)
+    plt.close()
 
     print(f"Chart generated successfully: {OUTPUT_CHART}")
 
