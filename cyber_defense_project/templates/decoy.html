@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="decoy-body">
+    <div class="decoy-wrapper">
+        <h1 class="decoy-logo">G<span>o</span><span>o</span><span>g</span><span>l</span><span>e</span></h1>
+
+        <form method="POST" class="decoy-search-box">
+            <input type="text" name="decoy_keyword" placeholder="Search the web" value="{{ search_term }}" required>
+            <button type="submit">Search</button>
+        </form>
+
+        <div class="results">
+            {% for item in fake_results %}
+                <div class="result-card">
+                    <p class="url">{{ item.url }}</p>
+                    <h3>{{ item.title }}</h3>
+                    <p>{{ item.summary }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
