@@ -5,47 +5,64 @@ import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent
 LOG_FILE = BASE_DIR / "logs.txt"
-OUTPUT = BASE_DIR / "monthly_abnormal_interaction_attempts.png"
+OUTPUT_CHART = BASE_DIR / "monthly_abnormal_interaction_attempts.png"
+
+
+def _parse_unified_log(parts: list[str]) -> dict | None:
+    """Parse 8-column unified log format used by current app."""
+    if len(parts) != 8:
+        return None
+
+    return {
+        "timestamp": parts[0].strip("[]"),
+        "context": parts[7],
+        "is_abnormal": "ABNORMAL" in parts[7].upper(),
+    }
+
+
+def _parse_legacy_log(parts: list[str]) -> dict | None:
+    """Parse legacy 5-column format for backward compatibility."""
+    if len(parts) != 5:
+        return None
+
+    classification = parts[3]
+    return {
+        "timestamp": parts[0].strip("[]"),
+        "context": f"LEGACY_{classification.upper()}",
+        "is_abnormal": classification.strip().lower() == "abnormal",
+    }
 
 
 def load_log_dataframe() -> pd.DataFrame:
+    """Load logs.txt and normalize both current + legacy structures."""
     if not LOG_FILE.exists():
-        return pd.DataFrame()
+        return pd.DataFrame(columns=["timestamp", "context", "is_abnormal"])
 
-    rows = []
+    records = []
     for line in LOG_FILE.read_text(encoding="utf-8").splitlines():
-        parts = [p.strip() for p in line.split("|")]
-        if len(parts) != 8:
+        if "|" not in line:
             continue
 
-        rows.append(
-            {
-                "timestamp": parts[0].strip("[]"),
-                "session_id": parts[1],
-                "input": parts[2],
-                "length": parts[3],
-                "special_chars": parts[4],
-                "time_delta": parts[5],
-                "interaction_count": parts[6],
-                "context": parts[7],
-            }
-        )
+        parts = [p.strip() for p in line.split("|")]
+        record = _parse_unified_log(parts) or _parse_legacy_log(parts)
+        if record:
+            records.append(record)
 
-    if not rows:
-        return pd.DataFrame()
+    if not records:
+        return pd.DataFrame(columns=["timestamp", "context", "is_abnormal"])
 
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(records)
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
     return df.dropna(subset=["timestamp"])
 
 
-def generate_chart() -> None:
+def generate_monthly_abnormal_chart() -> None:
     df = load_log_dataframe()
     if df.empty:
         print("No valid log entries found.")
         return
 
-    abnormal_df = df[df["context"].str.contains("ABNORMAL", case=False, na=False)].copy()
+    abnormal_df = df[df["is_abnormal"]].copy()
     if abnormal_df.empty:
         print("No abnormal behavior entries found in logs.")
         return
@@ -57,13 +74,13 @@ def generate_chart() -> None:
     plt.bar(grouped["month"], grouped["count"], color="#00bfff")
     plt.title("Monthly Abnormal Interaction Attempts")
     plt.xlabel("Month")
-    plt.ylabel("Count")
+    plt.ylabel("Number of Attempts")
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig(OUTPUT)
+    plt.savefig(OUTPUT_CHART)
 
-    print(f"Saved chart: {OUTPUT}")
+    print(f"Chart generated successfully: {OUTPUT_CHART}")
 
 
 if __name__ == "__main__":
-    generate_chart()
+    generate_monthly_abnormal_chart()
