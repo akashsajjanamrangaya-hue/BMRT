@@ -3,63 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureSearch</title>
+    <title>Security Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="decoy-page">
-    <main class="decoy-main">
-        <h1 class="decoy-title">SecureSearch</h1>
+<body>
+    <div class="container">
+        <h1>Security Monitoring Dashboard</h1>
+        <p class="subtitle">Behavior-Based Intrusion Detection Summary</p>
 
-        <form method="POST" class="decoy-search-form" id="decoyForm">
-            <input
-                type="text"
-                id="decoyInput"
-                name="decoy_input"
-                autocomplete="off"
-                placeholder="Search indexed knowledge"
-                value="{{ query }}"
-                required
-            >
-            <button type="submit">Search</button>
-        </form>
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h2>{{ total_requests }}</h2>
+                <p>Total Requests</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_normal }}</h2>
+                <p>Total Normal</p>
+            </div>
+            <div class="stat-card">
+                <h2>{{ total_abnormal }}</h2>
+                <p>Total Abnormal</p>
+            </div>
+        </div>
 
-        <section class="decoy-results" id="resultSection">
-            {% for item in results %}
-                <article class="decoy-result-card">
-                    <p class="decoy-url">{{ item.url }}</p>
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.summary }}</p>
-                </article>
-            {% endfor %}
-        </section>
+        <!-- Logs Table -->
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Log Entries</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                        <tr>
+                            <td>{{ log }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-        <nav class="decoy-pagination">
-            {% if has_prev %}
-                <a href="{{ url_for('decoy', page=page-1) }}">Previous</a>
-            {% endif %}
-            <span>Page {{ page }}</span>
-            {% if has_next %}
-                <a href="{{ url_for('decoy', page=page+1) }}">Next</a>
-            {% endif %}
-        </nav>
-    </main>
-
-    <footer class="decoy-footer">
-        Academic deception environment for behavior analytics research.
-    </footer>
-
-    <script>
-        const input = document.getElementById('decoyInput');
-        const resultSection = document.getElementById('resultSection');
-
-        // Simple local response feel (visual-only) to mimic instant search interaction.
-        input.addEventListener('input', function () {
-            resultSection.style.opacity = '0.72';
-            clearTimeout(window.resultGlowTimer);
-            window.resultGlowTimer = setTimeout(() => {
-                resultSection.style.opacity = '1';
-            }, 90);
-        });
-    </script>
+        <p class="link">
+            <a href="{{ url_for('index') }}">Back to Detection Interface</a>
+        </p>
+    </div>
 </body>
 </html>

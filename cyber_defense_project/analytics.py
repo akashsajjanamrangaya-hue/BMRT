@@ -3,68 +3,70 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import pandas as pd
 
+# Base directory of the project
 BASE_DIR = Path(__file__).resolve().parent
+
+# Log file path
 LOG_FILE = BASE_DIR / "logs.txt"
-OUTPUT_CHART = BASE_DIR / "monthly_abnormal_interaction_attempts.png"
+
+# Output chart path
+OUTPUT_CHART = BASE_DIR / "monthly_abnormal_attempts.png"
 
 
-def _parse_unified_log(parts: list[str]) -> dict | None:
-    """Parse 8-column unified log format used by current app."""
-    if len(parts) != 8:
-        return None
+def parse_log_file() -> pd.DataFrame:
+    """
+    Parse behavior-analysis entries from logs.txt.
 
-    return {
-        "timestamp": parts[0].strip("[]"),
-        "context": parts[7],
-        "is_abnormal": "ABNORMAL" in parts[7].upper(),
-    }
+    Expected log format:
+    [Timestamp] | Keyword | Risk Score | Classification | Action
 
-
-def _parse_legacy_log(parts: list[str]) -> dict | None:
-    """Parse legacy 5-column format for backward compatibility."""
-    if len(parts) != 5:
-        return None
-
-    classification = parts[3]
-    return {
-        "timestamp": parts[0].strip("[]"),
-        "context": f"LEGACY_{classification.upper()}",
-        "is_abnormal": classification.strip().lower() == "abnormal",
-    }
-
-
-def load_log_dataframe() -> pd.DataFrame:
-    """Load logs.txt and normalize both current + legacy structures."""
+    Decoy-only interaction logs are ignored.
+    """
     if not LOG_FILE.exists():
-        return pd.DataFrame(columns=["timestamp", "context", "is_abnormal"])
+        return pd.DataFrame(columns=["timestamp", "classification"])
 
     records = []
+
     for line in LOG_FILE.read_text(encoding="utf-8").splitlines():
-        if "|" not in line:
+        # Ignore invalid or decoy-only logs
+        if "|" not in line or "Decoy Search" in line:
             continue
 
-        parts = [p.strip() for p in line.split("|")]
-        record = _parse_unified_log(parts) or _parse_legacy_log(parts)
-        if record:
-            records.append(record)
+        parts = [part.strip() for part in line.split("|")]
 
-    if not records:
-        return pd.DataFrame(columns=["timestamp", "context", "is_abnormal"])
+        if len(parts) != 5:
+            continue
+
+        timestamp = parts[0].strip("[]")
+        classification = parts[3]
+
+        records.append(
+            {
+                "timestamp": timestamp,
+                "classification": classification,
+            }
+        )
 
     df = pd.DataFrame(records)
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+
     return df.dropna(subset=["timestamp"])
 
 
 def generate_monthly_abnormal_chart() -> None:
-    df = load_log_dataframe()
+    """
+    Generate a bar chart showing monthly abnormal access attempts.
+    """
+    df = parse_log_file()
+
     if df.empty:
         print("No valid log entries found.")
         return
 
-    abnormal_df = df[df["is_abnormal"]].copy()
+    abnormal_df = df[df["classification"] == "Abnormal"]
+
     if abnormal_df.empty:
-        print("No abnormal behavior entries found in logs.")
+        print("No abnormal entries found in logs.")
         return
 
     abnormal_df["month"] = abnormal_df["timestamp"].dt.to_period("M").astype(str)
@@ -72,12 +74,13 @@ def generate_monthly_abnormal_chart() -> None:
 
     plt.figure(figsize=(10, 5))
     plt.bar(grouped["month"], grouped["count"], color="#00bfff")
-    plt.title("Monthly Abnormal Interaction Attempts")
+    plt.title("Monthly Abnormal Access Attempts")
     plt.xlabel("Month")
     plt.ylabel("Number of Attempts")
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.savefig(OUTPUT_CHART)
+    plt.close()
 
     print(f"Chart generated successfully: {OUTPUT_CHART}")
 
